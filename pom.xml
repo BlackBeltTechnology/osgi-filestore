@@ -1,0 +1,109 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>hu.blackbelt.osgi.filestore</groupId>
+    <artifactId>osgi-filestore</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    
+    <name>OSGi filestore reactor project</name>
+    
+    <modules>
+        <module>parent</module>
+        <module>filestore-api</module>
+        <module>mime-api</module>
+        <module>mime-impl</module>
+        <module>filestore-urlhandler</module>
+        <module>filestore-filesystem</module>
+        <module>filestore-rdbms</module>
+        <module>filestore-servlet</module>
+    </modules>
+    
+    <scm>
+        <connection>scm:git:git://github.com/BlackBeltTechnology/osgi-filestore.git</connection>
+        <developerConnection>scm:git:ssh://${git.username}@github.com:BlackBeltTechnology/osgi-filestore.git</developerConnection>
+        <url>http://github.com/BlackBeltTechnology/osgi-filestore</url>
+    </scm>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>external.atlassian.jgitflow</groupId>
+                <artifactId>jgitflow-maven-plugin</artifactId>
+                <version>${jgitflow-maven-plugin.version}</version>
+                <configuration>
+                    <noDeploy>true</noDeploy>
+                    <username>${git.username}</username>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-plugin</artifactId>
+                <version>1.9.5</version>
+                <configuration>
+                    <connectionType>developerConnection</connectionType>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <properties>
+        <jgitflow-maven-plugin.version>1.0-m5.1</jgitflow-maven-plugin.version>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+    
+    
+    <profiles>
+        <profile>
+            <id>release-github</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>de.jutzig</groupId>
+                        <artifactId>github-release-plugin</artifactId>
+                        <version>1.2.0</version>
+                        <configuration>
+                            <repositoryId>https://github.com/BlackBeltTechnology/osgi-filestore.git</repositoryId>
+                            <description>Branch: ${env.WERCKER_GIT_BRANCH} Wercker: ${env.WERCKER_RUN_URL}</description>
+                            <releaseName>${project.version}</releaseName>
+                            <prerelease>true</prerelease>
+                            <tag>${project.version}</tag>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>osgi-api/target</directory>
+                                    <includes>
+                                        <include>*.jar</include>
+                                    </includes>
+                                </fileSet>
+                                <fileSet>
+                                    <directory>osgi-impl/target</directory>
+                                    <includes>
+                                        <include>*.jar</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>release-to-github</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>release</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
+</project>
