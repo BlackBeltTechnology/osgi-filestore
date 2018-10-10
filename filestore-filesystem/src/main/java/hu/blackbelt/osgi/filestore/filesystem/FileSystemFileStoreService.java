@@ -20,7 +20,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -206,10 +205,21 @@ public class FileSystemFileStoreService implements FileStoreService {
     }
 
     private String idToPath(String fileId) {
-        return String.join(File.separator, fileId.split("(?<=\\G.{2})"));
+        return join(File.separator, fileId.split("(?<=\\G.{2})"));
     }
 
     static boolean isNullOrEmpty(String string) {
         return string == null || string.isEmpty();
+    }
+
+    static String join(String separator, String[] items) {
+        StringBuilder sb = new StringBuilder();
+        for (String part : items) {
+            if (sb.length() != 0) {
+                sb.append(separator);
+            }
+            sb.append(part);
+        }
+        return sb.toString();
     }
 }

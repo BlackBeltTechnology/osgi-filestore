@@ -242,7 +242,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
                                 f.getFieldName(), id, f.getName(), url.toString(), f.getContentType(), f.getSize()));
                     }
                 }
-                postResponse = "{\"files\":[" + String.join(",", allFiles) + "],\"finished\":\"ok\"}";
+                postResponse = "{\"files\":[" + join(",", allFiles) + "],\"finished\":\"ok\"}";
             }
             finish(request, postResponse);
             renderMessage(response, postResponse, MIMETYPE_APPLICATION_JSON);
@@ -540,4 +540,14 @@ public class UploadServlet extends HttpServlet implements Servlet {
         }
     }
 
+    static String join(String separator, List<String> items) {
+        StringBuilder sb = new StringBuilder();
+        for (String part : items) {
+            if (sb.length() != 0) {
+                sb.append(separator);
+            }
+            sb.append(part);
+        }
+        return sb.toString();
+    }
 }
