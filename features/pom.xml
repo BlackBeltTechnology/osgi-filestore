@@ -14,6 +14,11 @@
 
     <name>BlackBelt :: Filestore</name>
 
+    <properties>
+        <karaf-version>4.2.1</karaf-version>
+        <osgi-liquibase-version>1.0.0-SNAPSHOT</osgi-liquibase-version>
+    </properties>
+
     <build>
         <resources>
             <resource>
@@ -60,10 +65,11 @@
                     <plugin>
                         <groupId>org.apache.karaf.tooling</groupId>
                         <artifactId>karaf-maven-plugin</artifactId>
+                        <version>4.2.0</version>
                         <executions>
                             <execution>
                                 <id>feature-verify</id>
-                                <phase>test</phase>
+                                <phase>process-resources</phase>
                                 <goals>
                                     <goal>verify</goal>
                                 </goals>
@@ -102,8 +108,7 @@
         <dependency>
             <groupId>org.apache.karaf.features</groupId>
             <artifactId>framework</artifactId>
-            <classifier>features</classifier>
-            <type>xml</type>
+            <type>kar</type>
             <scope>runtime</scope>
             <version>${karaf-version}</version>
         </dependency>
@@ -131,20 +136,6 @@
             <scope>runtime</scope>
             <version>${karaf-version}</version>
         </dependency>
-        <dependency>
-            <groupId>hu.blackbelt.judo.karaf</groupId>
-            <artifactId>judo-karaf-runtime-features</artifactId>
-            <classifier>features</classifier>
-            <type>xml</type>
-            <scope>runtime</scope>
-            <version>${judo-karaf-runtime-version}</version>
-        </dependency>
     </dependencies>
 
-    <properties>
-        <karaf-version>4.2.1</karaf-version>
-        <judo-karaf-runtime-version>1.0.1_develop-74</judo-karaf-runtime-version>
-
-        <osgi-liquibase-version>1.0.0-SNAPSHOT</osgi-liquibase-version>
-    </properties>
 </project>
