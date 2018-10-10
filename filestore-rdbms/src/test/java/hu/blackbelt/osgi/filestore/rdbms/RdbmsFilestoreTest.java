@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.osgi.framework.BundleContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -22,6 +23,7 @@ import java.io.InputStream;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.endsWith;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration("/context.xml")
@@ -42,11 +44,18 @@ public class RdbmsFilestoreTest {
     @Mock
     MimeTypeService mimeTypeServiceMock;
 
+    @Mock
+    BundleContext context;
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
         target.dataSource = dataSource;
-        MockOsgi.activate(target);
+
+        RdbmsFileStoreService.Config config = mock(RdbmsFileStoreService.Config.class);
+        when(config.protocol()).thenReturn("judostore");
+
+        target.activate(context, config);
         MockOsgi.setReferences(target, dataSource);
         data = this.getClass().getClassLoader().getResourceAsStream("test.txt");
     }

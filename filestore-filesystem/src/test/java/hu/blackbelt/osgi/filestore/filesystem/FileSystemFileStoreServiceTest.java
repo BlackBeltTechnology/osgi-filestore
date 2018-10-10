@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.osgi.framework.BundleContext;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,6 +32,9 @@ public class FileSystemFileStoreServiceTest {
     @Mock
     MimeTypeService mimeTypeServiceMock;
 
+    @Mock
+    BundleContext context;
+
     private Path root;
 
     @Before
@@ -39,8 +43,10 @@ public class FileSystemFileStoreServiceTest {
 
         FileSystemFileStoreService.Config config = mock(FileSystemFileStoreService.Config.class);
         when(config.fileSystemStoreDirectory()).thenReturn(root.toString());
+        when(config.protocol()).thenReturn("judostore");
 
-        target.activate(config);
+        target.activate(context, config);
+
         MockOsgi.setReferences(target, mimeTypeServiceMock);
     }
 
