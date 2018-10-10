@@ -1,4 +1,4 @@
-package hu.blackbelt.osgi.filestore.urlhandler.impl;
+package hu.blackbelt.osgi.filestore.urlhandler;
 
 import hu.blackbelt.osgi.filestore.api.FileStoreService;
 import lombok.SneakyThrows;

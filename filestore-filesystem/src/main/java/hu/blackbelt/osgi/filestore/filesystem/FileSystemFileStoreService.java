@@ -7,10 +7,13 @@ import hu.blackbelt.osgi.filestore.api.FileStoreService;
 import hu.blackbelt.osgi.filestore.urlhandler.FileStoreUrlStreamHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.url.URLStreamHandlerService;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,9 +23,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,9 @@ public class FileSystemFileStoreService implements FileStoreService {
 
     @ObjectClassDefinition()
     public @interface Config {
+
+        @AttributeDefinition(name="Protocol", description = "Protocol of URL stream handler")
+        String protocol();
 
         @AttributeDefinition(required = false, name = "Filesystem store directory")
         String fileSystemStoreDirectory();
@@ -53,6 +57,7 @@ public class FileSystemFileStoreService implements FileStoreService {
     public static final String MINUS = "-";
 
     private String dataStorePath = DEFAULT_ROOT;
+    private String protocol;
     private File targetDir = new File(DEFAULT_ROOT);
 
     LoadingCache<String, java.util.Properties> propertiesLoadingCache = CACHE_EXPIRE
@@ -63,19 +68,29 @@ public class FileSystemFileStoreService implements FileStoreService {
                         }
                     });
 
-    @Reference(policyOption = ReferencePolicyOption.GREEDY)
-    FileStoreUrlStreamHandler urlStreamHandler;
-
     @Reference
     MimeTypeService mimeTypeService;
 
-    public FileSystemFileStoreService() { }
+    private ServiceRegistration<URLStreamHandlerService> urlStreamHandlerServiceServiceRegistration;
 
     @Activate
-    public void activate(Config config) {
+    void activate(BundleContext context, Config config) {
         dataStorePath = config.fileSystemStoreDirectory() != null ? config.fileSystemStoreDirectory() : DEFAULT_ROOT;
+        protocol = config.protocol();
         targetDir = new File(dataStorePath);
         targetDir.mkdirs();
+
+        Dictionary props = new Hashtable();
+        props.put("url.handler.protocol", protocol);
+        urlStreamHandlerServiceServiceRegistration = context.registerService(URLStreamHandlerService.class, new FileStoreUrlStreamHandler(this), props);
+    }
+
+    @Deactivate
+    void deactivate() {
+        if (urlStreamHandlerServiceServiceRegistration != null) {
+            urlStreamHandlerServiceServiceRegistration.unregister();
+        }
+        urlStreamHandlerServiceServiceRegistration = null;
     }
 
     @Override
@@ -182,8 +197,13 @@ public class FileSystemFileStoreService implements FileStoreService {
     public URL getAccessUrl(String fileId) throws IOException {
         Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
 
-        return new URL(urlStreamHandler.getProtocol() + ":" + fileId + MINUS + getFileName(fileId));
+        return new URL(protocol + ":" + fileId + MINUS + getFileName(fileId));
         // return idToDataFile(fileId).toURI().toURL();
+    }
+
+    @Override
+    public String getProtocol() {
+        return protocol;
     }
 
     private File idToDirectory(String fileId) {

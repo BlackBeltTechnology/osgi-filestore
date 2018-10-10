@@ -80,4 +80,11 @@ public interface FileStoreService {
      * @throws IOException
      */
     URL getAccessUrl(String fileId) throws IOException;
+
+    /**
+     * Get protocol of file store service.
+     *
+     * @return
+     */
+    String getProtocol();
 }
