@@ -94,7 +94,7 @@ public class FileSystemFileStoreServiceTest {
 
     @Test
     public void testGetNullFileId() throws IOException {
-        thrown.expect(IllegalArgumentException.class);
+        thrown.expect(NullPointerException.class);
         target.exists(null);
         target.getFileName(null);
         target.getMimeType(null);

@@ -1,6 +1,5 @@
 package hu.blackbelt.osgi.filestore.rdbms;
 
-import com.google.common.base.Strings;
 import hu.blackbelt.osgi.filestore.api.FileStoreService;
 import hu.blackbelt.osgi.filestore.rdbms.helper.FileEntity;
 import hu.blackbelt.osgi.filestore.urlhandler.FileStoreUrlStreamHandler;
@@ -9,14 +8,16 @@ import org.apache.sling.commons.mime.MimeTypeService;
 import org.osgi.service.component.annotations.*;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.lob.DefaultLobHandler;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 
 import static hu.blackbelt.osgi.filestore.rdbms.helper.FilestoreHelper.*;
 
@@ -46,14 +47,14 @@ public class RdbmsFileStoreService implements FileStoreService {
     public final String put(final InputStream data, final String fileName, final String mimeType) throws IOException {
         FileEntity file = FileEntity.createEntity(fileName, mimeType, data);
 
-        if (Strings.isNullOrEmpty(fileName)) {
-            if (!Strings.isNullOrEmpty(mimeType)) {
+        if (isNullOrEmpty(fileName)) {
+            if (!isNullOrEmpty(mimeType)) {
                 file.setFilename(file.getFileId() + "." + mimeTypeService.getExtension(mimeType));
             } else {
                 file.setFilename(file.getFileId() + ".bin");
             }
         }
-        if (Strings.isNullOrEmpty(mimeType)) {
+        if (isNullOrEmpty(mimeType)) {
             file.setMimeType(mimeTypeService.getMimeType(file.getFilename()));
         }
         if (file.getMimeType() == null) {
@@ -73,7 +74,12 @@ public class RdbmsFileStoreService implements FileStoreService {
     @Override
     public InputStream get(String fileId) {
         try {
-            return jdbcTemplate.queryForObject(readString(fileId, DATA_FIELD), (rs, rowNum) -> rs.getBinaryStream(DATA_FIELD));
+            return jdbcTemplate.queryForObject(readString(fileId, DATA_FIELD), new RowMapper<InputStream>() {
+                @Override
+                public InputStream mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getBinaryStream(DATA_FIELD);
+                }
+            });
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new IllegalArgumentException(NOT_FOUND_MESSAGE);
         }
@@ -81,13 +87,23 @@ public class RdbmsFileStoreService implements FileStoreService {
 
     @Override
     public String getMimeType(String fileId) {
-        return jdbcTemplate.queryForObject(readString(fileId, MIME_TYPE_FIELD), (rs, rowNum) -> rs.getString(MIME_TYPE_FIELD));
+        return jdbcTemplate.queryForObject(readString(fileId, MIME_TYPE_FIELD), new RowMapper<String>() {
+            @Override
+            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                return rs.getString(MIME_TYPE_FIELD);
+            }
+        });
     }
 
     @Override
     public String getFileName(String fileId) {
         try {
-            return jdbcTemplate.queryForObject(readString(fileId, FILENAME_FIELD), (rs, rowNum) -> rs.getString(FILENAME_FIELD));
+            return jdbcTemplate.queryForObject(readString(fileId, FILENAME_FIELD), new RowMapper<String>() {
+                @Override
+                public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getString(FILENAME_FIELD);
+                }
+            });
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new IllegalArgumentException(NOT_FOUND_MESSAGE);
         }
@@ -96,18 +112,28 @@ public class RdbmsFileStoreService implements FileStoreService {
     @Override
     public long getSize(String fileId) {
         try {
-            return jdbcTemplate.queryForObject(readString(fileId, SIZE_FIELD), (rs, rowNum) -> rs.getLong(SIZE_FIELD));
+            return jdbcTemplate.queryForObject(readString(fileId, SIZE_FIELD), new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(SIZE_FIELD);
+                }
+            });
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new IllegalArgumentException(NOT_FOUND_MESSAGE);
         }
     }
 
     @Override
-    public LocalDateTime getCreateTime(String fileId) {
+    public Timestamp getCreateTime(String fileId) {
         try {
             Timestamp createTimeDate = jdbcTemplate.queryForObject(
-                    readString(fileId, CREATE_TIME_FIELD), (rs, rowNum) -> rs.getTimestamp(CREATE_TIME_FIELD));
-            return createTimeDate.toLocalDateTime();
+                    readString(fileId, CREATE_TIME_FIELD), new RowMapper<Timestamp>() {
+                        @Override
+                        public Timestamp mapRow(ResultSet rs, int rowNum) throws SQLException {
+                            return rs.getTimestamp(CREATE_TIME_FIELD);
+                        }
+                    });
+            return createTimeDate;
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new IllegalArgumentException(NOT_FOUND_MESSAGE);
         }
@@ -116,5 +142,9 @@ public class RdbmsFileStoreService implements FileStoreService {
     @Override
     public URL getAccessUrl(String fileId) throws IOException {
         return new URL(urlStreamHandler.getProtocol() + ":" + fileId + '-' + getFileName(fileId));
+    }
+
+    static boolean isNullOrEmpty(String string) {
+        return string == null || string.length() == 0;
     }
 }

@@ -3,7 +3,7 @@ package hu.blackbelt.osgi.filestore.api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * Represents a file store service.
@@ -22,6 +22,7 @@ public interface FileStoreService {
 
     /**
      * Checks the existence of a file <code>fileId</code> (If any representation exists return true).
+     *
      * @param fileId
      * @throws IOException
      */
@@ -46,6 +47,7 @@ public interface FileStoreService {
 
     /**
      * Get the file name of the given fileId.
+     *
      * @param fileId
      * @return
      * @throws IOException
@@ -55,6 +57,7 @@ public interface FileStoreService {
 
     /**
      * Get the file size of the given fileId.
+     *
      * @param fileId
      * @return
      * @throws IOException
@@ -62,15 +65,17 @@ public interface FileStoreService {
     long getSize(String fileId) throws IOException;
 
     /**
-     * Get the create time of the given fileId.
+     * Get the create time of the given fileId. Type is java.util.Date supporting for applications not supporting new date/time APIs.
+     *
      * @param fileId
      * @return
      * @throws IOException
      */
-    LocalDateTime getCreateTime(String fileId) throws IOException;
+    Date getCreateTime(String fileId) throws IOException;
 
     /**
      * Get absolute URL of file.
+     *
      * @return
      * @throws IOException
      */

@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.time.ZoneOffset;
 
 public class FileStoreUrlConnection extends URLConnection {
 
@@ -45,6 +44,6 @@ public class FileStoreUrlConnection extends URLConnection {
     @Override
     @SneakyThrows(IOException.class)
     public long getDate() {
-        return fileStoreService.getCreateTime(uuid).toEpochSecond(ZoneOffset.UTC);
+        return fileStoreService.getCreateTime(uuid).getTime();
     }
 }

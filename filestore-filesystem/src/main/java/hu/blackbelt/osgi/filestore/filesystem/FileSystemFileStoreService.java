@@ -1,15 +1,11 @@
 package hu.blackbelt.osgi.filestore.filesystem;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.io.Closeables;
-import com.google.common.primitives.Longs;
 import hu.blackbelt.osgi.filestore.api.FileStoreService;
 import hu.blackbelt.osgi.filestore.urlhandler.FileStoreUrlStreamHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
@@ -25,12 +21,15 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
 @Designate(ocd=FileSystemFileStoreService.Config.class)
+@Slf4j
 public class FileSystemFileStoreService implements FileStoreService {
 
     @ObjectClassDefinition()
@@ -91,14 +90,14 @@ public class FileSystemFileStoreService implements FileStoreService {
         String fn = fileName;
         String mt = mimeType;
 
-        if (Strings.isNullOrEmpty(fileName)) {
-            if (!Strings.isNullOrEmpty(mimeType)) {
+        if (isNullOrEmpty(fileName)) {
+            if (!isNullOrEmpty(mimeType)) {
                 fn = fileId + "." + mimeTypeService.getExtension(mimeType);
             } else {
                 fn = fileId + ".bin";
             }
         }
-        if (Strings.isNullOrEmpty(mimeType)) {
+        if (isNullOrEmpty(mimeType)) {
             mt = mimeTypeService.getMimeType(fn);
         }
         if (mt == null) {
@@ -113,14 +112,14 @@ public class FileSystemFileStoreService implements FileStoreService {
         properties.put(CREATE_DATE, String.valueOf(System.currentTimeMillis()));
         properties.put(SIZE, Long.toString(Files.copy(data, Paths.get(dataFile.getAbsolutePath()))).toString());
         properties.store(new FileOutputStream(idToPropertyFile(fileId)), "This is generated file metainfo, do not edit");
-        Closeables.closeQuietly(data);
 
         return fileId;
     }
 
     @Override
     public boolean exists(String fileId) {
-        Preconditions.checkArgument(fileId != null, FILE_ID_CANNOT_BE_NULL);
+        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
+
         try {
             return idToDataFile(fileId).exists();
         } catch (IOException e) {
@@ -130,13 +129,15 @@ public class FileSystemFileStoreService implements FileStoreService {
 
     @Override
     public InputStream get(String fileId) throws IOException {
-        Preconditions.checkArgument(fileId != null, FILE_ID_CANNOT_BE_NULL);
+        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
+
         return Files.newInputStream(idToDataFile(fileId).toPath());
     }
 
     @Override
     public String getMimeType(String fileId) throws IOException {
-        Preconditions.checkArgument(fileId != null, FILE_ID_CANNOT_BE_NULL);
+        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
+
         try {
             return (String) propertiesLoadingCache.get(fileId).get(MIME_TYPE);
         } catch (ExecutionException e) {
@@ -146,7 +147,8 @@ public class FileSystemFileStoreService implements FileStoreService {
 
     @Override
     public String getFileName(String fileId) throws IOException {
-        Preconditions.checkArgument(fileId != null, FILE_ID_CANNOT_BE_NULL);
+        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
+
         try {
             return (String) propertiesLoadingCache.get(fileId).get(FILE_NAME);
         } catch (ExecutionException e) {
@@ -156,27 +158,31 @@ public class FileSystemFileStoreService implements FileStoreService {
 
     @Override
     public long getSize(String fileId) throws IOException {
-        Preconditions.checkArgument(fileId != null, FILE_ID_CANNOT_BE_NULL);
+        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
+
         try {
-            return Longs.tryParse((String) propertiesLoadingCache.get(fileId).get(SIZE));
-        } catch (ExecutionException e) {
+            return Long.parseLong((String) propertiesLoadingCache.get(fileId).get(SIZE));
+        } catch (ExecutionException | NumberFormatException e) {
             throw new IOException(COULD_NOT_GET_PROPERTIES_FOR + fileId);
         }
     }
 
     @Override
-    public LocalDateTime getCreateTime(String fileId) throws IOException {
-        Preconditions.checkArgument(fileId != null, FILE_ID_CANNOT_BE_NULL);
+    public Date getCreateTime(String fileId) throws IOException {
+        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
+
         try {
-            return LocalDateTime.parse((String) propertiesLoadingCache.get(fileId).get(CREATE_DATE));
-        } catch (ExecutionException e) {
+            Long createTime = Long.parseLong((String) propertiesLoadingCache.get(fileId).get(CREATE_DATE));
+            return new Date(createTime);
+        } catch (ExecutionException | NumberFormatException e) {
             throw new IOException(COULD_NOT_GET_PROPERTIES_FOR + fileId);
         }
     }
 
     @Override
     public URL getAccessUrl(String fileId) throws IOException {
-        Preconditions.checkArgument(fileId != null, FILE_ID_CANNOT_BE_NULL);
+        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
+
         return new URL(urlStreamHandler.getProtocol() + ":" + fileId + MINUS + getFileName(fileId));
         // return idToDataFile(fileId).toURI().toURL();
     }
@@ -200,7 +206,10 @@ public class FileSystemFileStoreService implements FileStoreService {
     }
 
     private String idToPath(String fileId) {
-        return Joiner.on(File.separator).join(fileId.split("(?<=\\G.{2})"));
+        return String.join(File.separator, fileId.split("(?<=\\G.{2})"));
+    }
+
+    static boolean isNullOrEmpty(String string) {
+        return string == null || string.isEmpty();
     }
 }
-

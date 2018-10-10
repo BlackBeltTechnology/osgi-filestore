@@ -1,7 +1,5 @@
 package hu.blackbelt.osgi.filestore.mime.impl;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Maps;
 import hu.blackbelt.osgi.filestore.mime.api.MimeTypeResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.osgi.service.component.annotations.Activate;
@@ -12,7 +10,7 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -75,16 +73,21 @@ public class DefaultMimeTypeResolver implements MimeTypeResolver {
     }
 
     public Map<Pattern, String> parseMimeTypeMap(String parse) {
-        Map<String, String> encoded = Splitter.on(SEMICOLON).withKeyValueSeparator(EQUAL).split(
-                parse.replaceAll(ESCAPED_EQUAL_STRING_ORIGINAL, ESCAPED_EQUAL_STRING_REPLACEMENT)
-                        .replaceAll(ESCAPED_SEMICOLON_STRING_ORIGINAL, ESCAPED_SEMICOLON_STRING_REPLACEMENT));
+        String[] splitted = parse.replaceAll(ESCAPED_EQUAL_STRING_ORIGINAL, ESCAPED_EQUAL_STRING_REPLACEMENT)
+                .replaceAll(ESCAPED_SEMICOLON_STRING_ORIGINAL, ESCAPED_SEMICOLON_STRING_REPLACEMENT)
+                .split("\\s*" + SEMICOLON + "\\s*");
+        Map<String, String> encoded = new TreeMap<>();
+        for (String s : splitted) {
+            String[] keyValuePair = s.split("\\s*" + EQUAL + "\\s*");
+            encoded.put(keyValuePair[0], keyValuePair[1]);
+        }
 
-        Map<Pattern, String> ret = Maps.newHashMap();
+        Map<Pattern, String> ret = new HashMap<>();
         for (Map.Entry<String, String> e : encoded.entrySet()) {
             ret.put(Pattern.compile(
                     e.getKey().replaceAll(ESCAPED_EQUAL_STRING_REPLACEMENT, EQUAL).replaceAll(ESCAPED_SEMICOLON_STRING_ORIGINAL, SEMICOLON)),
                     e.getValue().replaceAll(ESCAPED_EQUAL_STRING_REPLACEMENT, EQUAL).replaceAll(ESCAPED_SEMICOLON_STRING_ORIGINAL, SEMICOLON));
         }
-        return ret;
+        return Collections.unmodifiableMap(ret);
     }
 }

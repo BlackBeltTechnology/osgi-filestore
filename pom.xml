@@ -17,6 +17,7 @@
         <module>filestore-filesystem</module>
         <module>filestore-rdbms</module>
         <module>filestore-servlet</module>
+        <module>features</module>
     </modules>
     
     <scm>

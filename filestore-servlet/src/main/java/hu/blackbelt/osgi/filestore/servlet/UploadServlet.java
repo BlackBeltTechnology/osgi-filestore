@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -234,10 +235,12 @@ public class UploadServlet extends HttpServlet implements Servlet {
             } else {
                 List<String> allFiles = new ArrayList<>();
                 for (org.apache.commons.fileupload.FileItem f : getMyLastReceivedFileItems(request)) {
-                    String id = fileStoreService.put(f.getInputStream(), f.getName(), f.getContentType());
-                    URL url = fileStoreService.getAccessUrl(id);
-                    allFiles.add(String.format("{\"field\":\"%s\",\"id\":\"%s\",\"name\":\"%s\",\"url\":\"%s\",\"ctype\":\"%s\",\"size\":%d}",
-                            f.getFieldName(), id, f.getName(), url.toString(), f.getContentType(), f.getSize()));
+                    try (InputStream data = f.getInputStream()) {
+                        String id = fileStoreService.put(data, f.getName(), f.getContentType());
+                        URL url = fileStoreService.getAccessUrl(id);
+                        allFiles.add(String.format("{\"field\":\"%s\",\"id\":\"%s\",\"name\":\"%s\",\"url\":\"%s\",\"ctype\":\"%s\",\"size\":%d}",
+                                f.getFieldName(), id, f.getName(), url.toString(), f.getContentType(), f.getSize()));
+                    }
                 }
                 postResponse = "{\"files\":[" + String.join(",", allFiles) + "],\"finished\":\"ok\"}";
             }
