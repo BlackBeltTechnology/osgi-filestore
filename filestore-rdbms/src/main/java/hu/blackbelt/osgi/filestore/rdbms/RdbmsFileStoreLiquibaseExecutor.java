@@ -8,6 +8,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -17,6 +19,13 @@ import java.sql.SQLException;
 @Slf4j
 public class RdbmsFileStoreLiquibaseExecutor {
 
+    @ObjectClassDefinition()
+    public @interface Config {
+
+        @AttributeDefinition(name="Table", description = "Table to store files")
+        String table();
+    }
+
     @Reference
     DataSource dataSource;
 
@@ -24,8 +33,9 @@ public class RdbmsFileStoreLiquibaseExecutor {
     LiquibaseExecutor liquibaseExecutor;
 
     @Activate
-    public void activate(BundleContext bundleContext) {
+    public void activate(BundleContext bundleContext, Config config) {
         try (Connection connection = dataSource.getConnection()) {
+            System.setProperty("filestore.liquibase.table.name", config.table());
             liquibaseExecutor.executeLiquibaseScript(connection, "liquibase/changelog.xml", bundleContext.getBundle());
         } catch (SQLException | LiquibaseException e) {
             log.error("Could not execute liquibase script", e);

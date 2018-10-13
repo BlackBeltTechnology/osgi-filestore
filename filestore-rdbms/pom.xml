@@ -23,9 +23,16 @@
                     <instructions>
                         <Export-Package/>
                         <Import-Package>
-                            !javax.annotation,
                             !lombok,
-                            ,liquibase;version="[3,4)",
+                            liquibase;version="[3,4)",
+                            com.google.common.base;version="[14.0,30)",
+                            com.google.common.cache;version="[14.0,30)",
+                            com.google.common.collect;version="[14.0,30)",
+                            com.google.common.io;version="[14.0,30)",
+                            com.google.common.primitives;version="[14.0,30)",
+                            com.google.common.hash;version="[14.0,30)",
+                            com.google.common.util.concurrent;version="[14.0,30)",
+                            javax.annotation;version="[1.0,2)",
                             *
                         </Import-Package>
                         <_sources>true</_sources>
@@ -68,7 +75,7 @@
         <dependency>
             <groupId>hu.blackbelt.osgi.liquibase</groupId>
             <artifactId>osgi-liquibase</artifactId>
-            <version>${osgi-liquibase.version}</version>
+            <version>${osgi-liquibase-version}</version>
         </dependency>
 
         <dependency>
@@ -121,6 +128,5 @@
     <properties>
         <sling-commons-mime.version>2.1.8</sling-commons-mime.version>
         <spring.version>4.1.2.RELEASE</spring.version>
-        <osgi-liquibase.version>1.0.0</osgi-liquibase.version>
     </properties>
 </project>

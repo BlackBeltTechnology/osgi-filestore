@@ -16,7 +16,6 @@
 
     <properties>
         <karaf-version>4.2.1</karaf-version>
-        <osgi-liquibase-version>1.0.0</osgi-liquibase-version>
     </properties>
 
     <build>
@@ -65,7 +64,8 @@
                     <plugin>
                         <groupId>org.apache.karaf.tooling</groupId>
                         <artifactId>karaf-maven-plugin</artifactId>
-                        <version>4.2.0</version>
+                        <version>${karaf-version}</version>
+                        <extensions>true</extensions>
                         <executions>
                             <execution>
                                 <id>feature-verify</id>

@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.1.xsd">
 
-<beans>
+    <bean id="systemPrereqs"
+          class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetObject" value="#{@systemProperties}" />
+        <property name="targetMethod" value="putAll" />
+        <property name="arguments">
+            <!-- The new Properties -->
+            <util:properties>
+                <prop key="filestore.liquibase.table.name">FILESTORE</prop>
+            </util:properties>
+        </property>
+    </bean>
+
     <bean id="liquibase" class="liquibase.integration.spring.SpringLiquibase">
         <property name="dataSource" ref="basicDataSource" />
         <property name="changeLog" value="liquibase/changelog.xml" />

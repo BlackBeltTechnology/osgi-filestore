@@ -54,6 +54,7 @@ public class RdbmsFilestoreTest {
 
         RdbmsFileStoreService.Config config = mock(RdbmsFileStoreService.Config.class);
         when(config.protocol()).thenReturn("judostore");
+        when(config.table()).thenReturn("FILESTORE");
 
         target.activate(context, config);
         MockOsgi.setReferences(target, dataSource);
@@ -101,7 +102,7 @@ public class RdbmsFilestoreTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void testGetIllegalFileId() {
+    public void testGetIllegalFileId() throws IOException {
         assertThat(target.exists("notexists"), equalTo(false));
         thrown.expect(IllegalArgumentException.class);
         target.getFileName("notexists");
@@ -110,7 +111,7 @@ public class RdbmsFilestoreTest {
     }
 
     @Test
-    public void testGetNullFileId() {
+    public void testGetNullFileId() throws IOException {
         thrown.expect(IllegalArgumentException.class);
         target.exists(null);
         target.getFileName(null);

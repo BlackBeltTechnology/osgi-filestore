@@ -8,7 +8,7 @@
    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
     <changeSet author="judo" id="rdbms-filesystem-table">
-        <createTable tableName="JUDO_FILESTORE">
+        <createTable tableName="${filestore.liquibase.table.name}">
             <column name="FILE_ID" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true"/>
             </column>

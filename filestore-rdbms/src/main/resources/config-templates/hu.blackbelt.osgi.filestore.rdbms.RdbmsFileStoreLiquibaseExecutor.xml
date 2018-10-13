@@ -2,6 +2,6 @@
 <components xmlns="http://osgi.blackbelt.hu/configuration/mapper/v1/xml/ns/definition">
     <component>
         <factoryPid>default</factoryPid>
-        <condition><![CDATA[fileStoreType == "rdbms"]]></condition>
+        <condition><![CDATA[fileStoreType == "rdbms" && executeLiquibase == "true"]]></condition>
     </component>
 </components>
