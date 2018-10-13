@@ -121,6 +121,6 @@
     <properties>
         <sling-commons-mime.version>2.1.8</sling-commons-mime.version>
         <spring.version>4.1.2.RELEASE</spring.version>
-        <osgi-liquibase.version>1.0.0-SNAPSHOT</osgi-liquibase.version>
+        <osgi-liquibase.version>1.0.0</osgi-liquibase.version>
     </properties>
 </project>

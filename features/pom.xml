@@ -16,7 +16,7 @@
 
     <properties>
         <karaf-version>4.2.1</karaf-version>
-        <osgi-liquibase-version>1.0.0-SNAPSHOT</osgi-liquibase-version>
+        <osgi-liquibase-version>1.0.0</osgi-liquibase-version>
     </properties>
 
     <build>
