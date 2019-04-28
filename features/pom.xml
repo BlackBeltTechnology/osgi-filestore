@@ -6,18 +6,13 @@
         <groupId>hu.blackbelt.osgi.filestore</groupId>
         <artifactId>parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../parent</relativePath>
+        <relativePath>../</relativePath>
     </parent>
 
     <artifactId>features</artifactId>
     <packaging>feature</packaging>
 
     <name>BlackBelt :: Filestore</name>
-
-    <properties>
-        <karaf-version>4.2.1</karaf-version>
-        <osgi-liquibase-version>1.0.0</osgi-liquibase-version>
-    </properties>
 
     <build>
         <resources>
