@@ -70,7 +70,7 @@
         <javassist.version>3.19.0-GA</javassist.version>
         
         
-        <checkstyle.version>8.10</checkstyle.version>
+        <checkstyle.version>8.18</checkstyle.version>
         <checkstyle.plugin.version>3.0.0</checkstyle.plugin.version>
         <checkstyle.skip>false</checkstyle.skip>
         <pmd.version>6.3.0</pmd.version>
