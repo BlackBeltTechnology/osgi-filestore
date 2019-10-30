@@ -257,7 +257,7 @@
             <dependency>
                 <groupId>hu.blackbelt.osgi.utils</groupId>
                 <artifactId>osgi-test</artifactId>
-                <version>${osgi-utils.version}</version>
+                <version>${osgi-utils-version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
