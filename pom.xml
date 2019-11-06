@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version='1.0' encoding='UTF-8'?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     
     <groupId>hu.blackbelt.osgi.filestore</groupId>
@@ -88,7 +88,7 @@
         
         <local-deploy.skip>false</local-deploy.skip>
         
-        <osgi-utils.version>1.0.6</osgi-utils.version>
+        <osgi-utils-version>1.0.6</osgi-utils-version>
         <karaf-version>4.2.5</karaf-version>
         <osgi-liquibase-version>1.0.0</osgi-liquibase-version>
 
@@ -257,7 +257,7 @@
             <dependency>
                 <groupId>hu.blackbelt.osgi.utils</groupId>
                 <artifactId>osgi-test</artifactId>
-                <version>${osgi-utils.version}</version>
+                <version>${osgi-utils-version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
