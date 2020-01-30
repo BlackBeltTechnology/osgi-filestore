@@ -87,9 +87,9 @@
         
         <local-deploy.skip>false</local-deploy.skip>
         
-        <osgi-utils-version>1.0.8.20200112_012807_d70d730_develop</osgi-utils-version>
+        <osgi-utils-version>1.0.8</osgi-utils-version>
         <karaf-version>4.2.5</karaf-version>
-        <osgi-liquibase-version>1.0.1.20191112_143131_a939259_develop</osgi-liquibase-version>
+        <osgi-liquibase-version>1.0.0</osgi-liquibase-version>
 
     </properties>
     
