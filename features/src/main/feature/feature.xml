@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<features name="filestore-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
+
+    <feature name="filestore-full" version="${project.version}" description="Blackbelt :: Filestore :: full" install="false">
+        <feature>filestore-filesystem</feature>
+        <feature>filestore-rdbms</feature>
+        <feature>filestore-servlet</feature>
+    </feature>
+
+    <feature name="filestore-filesystem" version="${project.version}" description="BlackBelt :: Filestore :: Filesystem" install="false">
+        <feature>filestore-ext-guava</feature> <!-- needed to cache metadata -->
+
+        <feature>filestore-base</feature>
+
+        <bundle>mvn:${project.groupId}/filestore-filesystem/${project.version}</bundle>
+        <bundle>mvn:${project.groupId}/filestore-urlhandler/${project.version}</bundle>
+    </feature>
+
+    <feature name="filestore-rdbms" version="${project.version}" description="BlackBelt :: Filestore :: RDBMS">
+        <feature>spring-jdbc</feature>
+        <bundle>mvn:hu.blackbelt.osgi.liquibase/osgi-liquibase/${osgi-liquibase-version}</bundle>
+
+        <feature>filestore-base</feature>
+
+        <bundle>mvn:${project.groupId}/filestore-rdbms/${project.version}</bundle>
+        <bundle>mvn:${project.groupId}/filestore-urlhandler/${project.version}</bundle>
+
+        <!-- workaround: filestore-rdbms feature could be installed without any registered datasource -->
+        <capability>osgi.service;effective:=active;objectClass=javax.sql.DataSource</capability>
+    </feature>
+
+    <feature name="filestore-servlet" version="${project.version}" description="BlackBelt :: Filestore :: Servlet" install="false">
+        <feature dependency="true">http</feature>
+
+        <feature>filestore-ext-json</feature>
+
+        <conditional>
+            <condition>filestore-filesystem</condition>
+            <bundle>mvn:${project.groupId}/filestore-servlet/${project.version}</bundle>
+        </conditional>
+
+        <conditional>
+            <condition>filestore-rdbms</condition>
+            <bundle>mvn:${project.groupId}/filestore-servlet/${project.version}</bundle>
+        </conditional>
+    </feature>
+
+    <feature name="filestore-base" version="${project.version}" description="BlackBelt :: Filestore :: Base" install="false">
+        <feature>filestore-dependencies</feature>
+
+        <bundle>mvn:${project.groupId}/filestore-api/${project.version}</bundle>
+
+        <bundle>mvn:${project.groupId}/mime-api/${project.version}</bundle>
+        <bundle>mvn:${project.groupId}/mime-impl/${project.version}</bundle>
+    </feature>
+
+    <feature name="filestore-dependencies" version="${project.version}" description="BlackBelt :: Filestore :: dependencies" install="false">
+        <feature>filestore-ext-sling-mime</feature>
+        <bundle>mvn:commons-fileupload/commons-fileupload/1.3.1</bundle>
+        <bundle>mvn:commons-io/commons-io/2.6</bundle>
+    </feature>
+
+    <feature name="filestore-ext-javax-servlet-api" version="3.1.0" description="Servlet API" install="false">
+        <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/3.1.0</bundle>
+    </feature>
+
+    <feature name="filestore-ext-sling-commons" version="2.3.0" description="Apache Sling Common OSGi API" install="false">
+        <feature dependency="true">eventadmin</feature>
+        <feature dependency="true">transaction-api</feature>
+        <feature dependency="true">scr</feature>
+        <feature>filestore-ext-javax-servlet-api</feature>
+        <bundle>mvn:org.apache.sling/org.apache.sling.commons.osgi/2.3.0</bundle>
+        <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.2</bundle>
+        <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.4.14</bundle>
+        <bundle>mvn:org.apache.sling/org.apache.sling.commons.json/2.0.16</bundle>
+        <capability>osgi.service;effective:=active;objectClass=org.apache.sling.api.resource.ResourceResolverFactory</capability>
+        <capability>osgi.service;effective:=active;objectClass=org.apache.sling.commons.scheduler.Scheduler</capability>
+    </feature>
+
+    <feature name="filestore-ext-sling-mime" version="2.1.8" description="Apache Sling MimeType resolver" install="false">
+        <feature dependency="true">scr</feature>
+        <feature>filestore-ext-sling-commons</feature>
+        <bundle>mvn:org.apache.sling/org.apache.sling.commons.mime/2.1.8</bundle>
+        <capability>osgi.service;effective:=active;objectClass=org.apache.sling.commons.mime.MimeTypeService</capability>
+    </feature>
+
+    <feature name="filestore-ext-guava" version="${guava.version}" description="Google Guava" install="false">
+        <bundle>mvn:com.google.guava/guava/${guava.version}</bundle>
+    </feature>
+
+    <feature name="filestore-ext-json" version="20170516" description="Json.org APi 20170516" install="false">
+        <bundle>mvn:org.json/json/20170516</bundle>
+    </feature>
+</features>

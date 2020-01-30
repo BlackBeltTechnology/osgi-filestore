@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+    <bean id="liquibase" class="liquibase.integration.spring.SpringLiquibase">
+        <property name="dataSource" ref="basicDataSource" />
+        <property name="changeLog" value="liquibase/changelog.xml" />
+        <property name="contexts" value="test, production" />
+    </bean>
+
+    <bean id="dao" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="org.apache.sling.commons.mime.MimeTypeService" />
+    </bean>
+
+    <bean id="filestoreService" class="hu.blackbelt.osgi.filestore.rdbms.RdbmsFileStoreService"/>
+    <bean id="lobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler"/>
+
+    <bean id="basicDataSource" class="org.apache.commons.dbcp.BasicDataSource"
+          destroy-method="close">
+        <property name="driverClassName" value="org.hsqldb.jdbcDriver" />
+        <property name="url" value="jdbc:hsqldb:mem:dataSource" />
+        <property name="username" value="sa" />
+        <property name="password" value="" />
+    </bean>
+</beans>

@@ -1,0 +1,2 @@
+dataSource.target=(dataSourceName=${defaultDataSourceName})
+protocol=${fileStoreProtocol ! "store"}

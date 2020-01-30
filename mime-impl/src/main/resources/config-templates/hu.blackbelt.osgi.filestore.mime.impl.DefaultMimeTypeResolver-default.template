@@ -1,0 +1,2 @@
+defaultMimeType = ${defaultMimeType ! "application/octet-stream"}
+mimeTypeByUrl = ${mimeTypeByUrl ! ".*/documentDownload.*type\\\=PDF=application/pdf"}
