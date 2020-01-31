@@ -89,7 +89,7 @@
         
         <osgi-utils-version>1.0.8</osgi-utils-version>
         <karaf-version>4.2.5</karaf-version>
-        <osgi-liquibase-version>1.0.0</osgi-liquibase-version>
+        <osgi-liquibase-version>1.0.1</osgi-liquibase-version>
 
     </properties>
     
