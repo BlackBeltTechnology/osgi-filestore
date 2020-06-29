@@ -85,6 +85,7 @@
     </feature>
 
     <feature name="filestore-ext-guava" version="${guava.version}" description="Google Guava" install="false">
+        <bundle>mvn:com.google.guava/failureaccess/1.0.1</bundle>
         <bundle>mvn:com.google.guava/guava/${guava.version}</bundle>
     </feature>
 
