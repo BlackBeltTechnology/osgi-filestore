@@ -807,83 +807,37 @@
         </profile>
         
         <profile>
-            <id>release-github</id>
+            <id>generate-github-release-body</id>
+            <activation>
+                <property>
+                    <name>github_release</name>
+                    <value>true</value>
+                </property>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>de.jutzig</groupId>
-                        <artifactId>github-release-plugin</artifactId>
-                        <version>1.4.0</version>
-                        <inherited>false</inherited>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.2.0</version>
                         <executions>
                             <execution>
-                                <id>release-to-github</id>
-                                <phase>deploy</phase>
+                                <id>template-github-release-body</id>
+                                <phase>process-resources</phase>
                                 <goals>
-                                    <goal>release</goal>
+                                    <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <repositoryId>https://github.com/BlackBeltTechnology/osgi-filestore.git</repositoryId>
-                                    <description>Branch: ${env.WERCKER_GIT_BRANCH} Wercker: ${env.WERCKER_RUN_URL}</description>
-                                    <releaseName>${project.version}</releaseName>
-                                    <deleteRelease>true</deleteRelease>
-                                    <tag>${project.version}</tag>
-                                    <fileSets>
-                                        <fileSet>
-                                            <directory>filestore-api/target</directory>
+                                    <outputDirectory>${basedir}/.release</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.basedir}</directory>
+                                            <filtering>true</filtering>
                                             <includes>
-                                                <include>*.jar</include>
+                                                <include>.releasetemplate</include>
                                             </includes>
-                                        </fileSet>
-                                        <fileSet>
-                                            <directory>filestore-filesystem/target</directory>
-                                            <includes>
-                                                <include>*.jar</include>
-                                            </includes>
-                                        </fileSet>
-                                        <fileSet>
-                                            <directory>filestore-rdbms/target</directory>
-                                            <includes>
-                                                <include>*.jar</include>
-                                            </includes>
-                                        </fileSet>
-                                        <fileSet>
-                                            <directory>filestore-servlet/target</directory>
-                                            <includes>
-                                                <include>*.jar</include>
-                                            </includes>
-                                        </fileSet>
-                                        <fileSet>
-                                            <directory>filestore-urlhandler/target</directory>
-                                            <includes>
-                                                <include>*.jar</include>
-                                            </includes>
-                                        </fileSet>
-                                        <fileSet>
-                                            <directory>mime-api/target</directory>
-                                            <includes>
-                                                <include>*.jar</include>
-                                            </includes>
-                                        </fileSet>
-                                        <fileSet>
-                                            <directory>mime-impl/target</directory>
-                                            <includes>
-                                                <include>*.jar</include>
-                                            </includes>
-                                        </fileSet>
-                                        <fileSet>
-                                            <directory>features/target/feature/</directory>
-                                            <includes>
-                                                <include>feature.xml</include>
-                                            </includes>
-                                        </fileSet>
-                                        <fileSet>
-                                            <directory>kar/target</directory>
-                                            <includes>
-                                                <include>*.kar</include>
-                                            </includes>
-                                        </fileSet>
-                                    </fileSets>
+                                        </resource>
+                                    </resources>
                                 </configuration>
                             </execution>
                         </executions>
