@@ -9,16 +9,20 @@ public final class FilestoreHelper {
 
     public static final String NOT_FOUND_MESSAGE = "No file found with the given id.";
 
-    public static final String INSERT_INTO =
-            "INSERT INTO JUDO_FILESTORE(FILE_ID, FILENAME, MIME_TYPE, SIZE, CREATE_TIME, DATA)"
-                    + "VALUES(?, ?, ?, ?, ?, ?);";
-
-    public static String countString(String fileId) {
-        return "SELECT COUNT(*) FROM JUDO_FILESTORE WHERE FILE_ID = '" + fileId + "'";
+    public static String count(String tableName, String fileId) {
+        return "SELECT COUNT(*) FROM " + tableName + " WHERE FILE_ID = '" + fileId + "'";
     }
 
-    public static String readString(String fileId, String colName) {
-        return "SELECT " + colName + " FROM JUDO_FILESTORE WHERE FILE_ID = '" + fileId + "'";
+    public static String insert(String tableName) { return "INSERT INTO " + tableName + " (FILE_ID, FILENAME, MIME_TYPE, SIZE, CREATE_TIME, DATA)"
+            + "VALUES(?, ?, ?, ?, ?, ?);";}
+
+    public static String read(String tableName, String fileId, String colName) {
+        return "SELECT " + colName + " FROM " + tableName + " WHERE FILE_ID = '" + fileId + "'";
+    }
+
+    public static String meta(String tableName, String fileId) {
+        return "SELECT " + FILENAME_FIELD + "," + MIME_TYPE_FIELD + "," + SIZE_FIELD + "," + CREATE_TIME_FIELD
+                + " FROM " + tableName + " WHERE FILE_ID = '" + fileId + "'";
     }
 
     private FilestoreHelper() {

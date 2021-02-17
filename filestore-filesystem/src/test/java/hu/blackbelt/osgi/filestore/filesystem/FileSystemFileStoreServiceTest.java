@@ -3,14 +3,12 @@ package hu.blackbelt.osgi.filestore.filesystem;
 import com.google.common.io.ByteStreams;
 import hu.blackbelt.osgi.utils.test.MockOsgi;
 import org.apache.sling.commons.mime.MimeTypeService;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.osgi.framework.BundleContext;
 
 import java.io.IOException;
@@ -19,11 +17,12 @@ import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Matchers.endsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class FileSystemFileStoreServiceTest {
 
     @InjectMocks
@@ -37,7 +36,7 @@ public class FileSystemFileStoreServiceTest {
 
     private Path root;
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         root = Files.createTempDirectory("tmp-filestore");
 
@@ -52,7 +51,6 @@ public class FileSystemFileStoreServiceTest {
 
     @Test
     public void testPutAndGetWithNullMimeType() throws IOException {
-        when(mimeTypeServiceMock.getExtension("text/plain")).thenReturn("txt");
         when(mimeTypeServiceMock.getMimeType(endsWith(".txt"))).thenReturn("text/plain");
 
         String fileId = target.put(this.getClass().getClassLoader().getResourceAsStream("test.txt"), "test.txt", null);
@@ -64,7 +62,6 @@ public class FileSystemFileStoreServiceTest {
 
     @Test
     public void testPutAndGetWithNullMimeTypeAndFileName() throws IOException {
-        when(mimeTypeServiceMock.getExtension("application/octetstream")).thenReturn("bin");
         when(mimeTypeServiceMock.getMimeType(endsWith(".bin"))).thenReturn("application/octetstream");
 
         String fileId = target.put(this.getClass().getClassLoader().getResourceAsStream("test.txt"), null, null);
@@ -77,7 +74,6 @@ public class FileSystemFileStoreServiceTest {
     @Test
     public void testPutAndGetWithMimeTypeAndNullFileName() throws IOException {
         when(mimeTypeServiceMock.getExtension("text/plain")).thenReturn("txt");
-        when(mimeTypeServiceMock.getMimeType(endsWith(".txt"))).thenReturn("text/plain");
 
         String fileId = target.put(this.getClass().getClassLoader().getResourceAsStream("test.txt"), null, "text/plain");
         assertThat(target.exists(fileId), equalTo(true));
@@ -86,25 +82,26 @@ public class FileSystemFileStoreServiceTest {
         assertThat(new String(ByteStreams.toByteArray(target.get(fileId))), equalTo("test"));
     }
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Test
     public void testGetIllegalFileId() throws IOException {
         assertThat(target.exists("notexists"), equalTo(false));
-        thrown.expect(IOException.class);
-        target.getFileName("notexists");
-        target.getMimeType("notexists");
-        target.get("notexists");
+        Exception exception = assertThrows(IOException.class, () -> {
+            target.exists("notexists");
+            target.getFileName("notexists");
+            target.getMimeType("notexists");
+            target.get("notexists");
+
+        });
     }
+
 
     @Test
     public void testGetNullFileId() throws IOException {
-        thrown.expect(NullPointerException.class);
-        target.exists(null);
-        target.getFileName(null);
-        target.getMimeType(null);
-        target.get(null);
+        Exception exception = assertThrows(NullPointerException.class, () -> {
+            target.exists(null);
+            target.getFileName(null);
+            target.getMimeType(null);
+            target.get(null);
+        });
     }
-
 }

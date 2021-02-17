@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.UUID;
 
 import static java.time.LocalDateTime.now;
@@ -34,7 +35,7 @@ public final class FileEntity {
         this.filename = filename == null ? fileId + '.' + mimeType : filename;
         this.data = data;
         this.size = data.available();
-        this.createTime = Timestamp.valueOf(now());
+        this.createTime = new Timestamp(new Date().getTime());
     }
 
     private FileEntity(String filename, String mimeType, String fileId, Timestamp createTime,
