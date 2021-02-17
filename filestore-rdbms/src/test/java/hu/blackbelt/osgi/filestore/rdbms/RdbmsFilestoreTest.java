@@ -1,5 +1,6 @@
 package hu.blackbelt.osgi.filestore.rdbms;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import hu.blackbelt.osgi.filestore.rdbms.fixture.RdbmsDatasourceFixture;
 import hu.blackbelt.osgi.filestore.rdbms.fixture.RdbmsDatasourceSingetonExtension;
@@ -48,10 +49,13 @@ public class RdbmsFilestoreTest {
     @BeforeEach
     public void setup() {
         target.dataSource = rdbmsDatasourceFixture.getDataSource();
-        rdbmsDatasourceFixture.executeInitiLiquibase(RdbmsFileStoreService.class.getClassLoader(), "liquibase/changelog.xml", rdbmsDatasourceFixture.getDataSource());
+        rdbmsDatasourceFixture.executeInitiLiquibase(
+                RdbmsFileStoreService.class.getClassLoader(), "liquibase/changelog.xml", rdbmsDatasourceFixture.getDataSource(),
+                ImmutableMap.of("table-name", "FILESTORE"));
 
         RdbmsFileStoreService.Config config = mock(RdbmsFileStoreService.Config.class);
         when(config.protocol()).thenReturn("judostore");
+        when(config.table()).thenReturn("FILESTORE");
 
         target.activate(context, config);
         data = this.getClass().getClassLoader().getResourceAsStream("test.txt");

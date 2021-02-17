@@ -17,6 +17,8 @@
     </feature>
 
     <feature name="filestore-rdbms" version="${project.version}" description="BlackBelt :: Filestore :: RDBMS">
+        <feature>filestore-ext-guava</feature> <!-- needed to cache metadata -->
+
         <feature>spring-jdbc</feature>
         <bundle>mvn:hu.blackbelt.osgi.liquibase/osgi-liquibase/${osgi-liquibase-version}</bundle>
 

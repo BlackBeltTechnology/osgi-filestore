@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 import javax.transaction.*;
 import java.sql.Connection;
 import java.time.Duration;
+import java.util.Map;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -127,11 +128,14 @@ public class RdbmsDatasourceFixture {
         liquibaseDb.setAutoCommit(false);
     }
 
-    public void executeInitiLiquibase(ClassLoader classLoader, String name, DataSource dataSource) {
+    public void executeInitiLiquibase(ClassLoader classLoader, String name, DataSource dataSource, Map<String, Object> parameters) {
         try {
             setLiquibaseDbDialect(dataSource.getConnection());
             final Liquibase liquibase = new Liquibase(name,
                     new ClassLoaderResourceAccessor(classLoader), liquibaseDb);
+            if (parameters != null) {
+                parameters.entrySet().stream().forEach(e -> liquibase.setChangeLogParameter(e.getKey(), e.getValue()));
+            }
             liquibase.update("init," + "1.0.0");
             liquibaseDb.close();
         } catch (Exception e) {
