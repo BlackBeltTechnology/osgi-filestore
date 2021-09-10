@@ -58,6 +58,8 @@ public final class Constants {
     public static final String METHOD_OPTIONS = "OPTIONS";
     public static final String ALLOW_VALUE = METHOD_GET + ":" + " HEAD, POST, PUT, DELETE, TRACE, OPTIONS";
 
+    public static final String HEADER_TOKEN = "X-Token";
+    public static final String PARAM_FILE_ID = "fileId";
 
     public static final String MIMETYPE_TEXT_PLAIN = "text/plain";
     public static final String MIMETYPE_TEXT_HTML = "text/html";

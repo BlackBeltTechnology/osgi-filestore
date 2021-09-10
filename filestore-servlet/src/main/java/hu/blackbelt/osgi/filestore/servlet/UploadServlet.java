@@ -1,5 +1,8 @@
 package hu.blackbelt.osgi.filestore.servlet;
 
+import hu.blackbelt.osgi.filestore.security.api.Token;
+import hu.blackbelt.osgi.filestore.security.api.TokenValidator;
+import hu.blackbelt.osgi.filestore.security.api.UploadClaim;
 import hu.blackbelt.osgi.fileupload.exceptions.UploadActionException;
 import hu.blackbelt.osgi.fileupload.exceptions.UploadCanceledException;
 import hu.blackbelt.osgi.fileupload.exceptions.UploadException;
@@ -40,6 +43,8 @@ import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getUploadedFile;
 import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.renderJsonResponse;
 import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.renderMessage;
 import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.statusToString;
+import static hu.blackbelt.osgi.filestore.servlet.utils.HttpUtils.processCORS;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Upload servlet.
@@ -75,7 +80,6 @@ public class UploadServlet extends HttpServlet implements Servlet {
 
     public static final ThreadLocal<HttpServletRequest> PER_THREAD_REQUEST = new ThreadLocal<>();
 
-
     protected long maxSize;
     protected long maxFileSize;
     protected int noDataTimeout;
@@ -88,6 +92,9 @@ public class UploadServlet extends HttpServlet implements Servlet {
 
     @Reference
     private FileStoreService fileStoreService;
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    TokenValidator tokenValidator;
 
     public UploadServlet() { }
 
@@ -112,18 +119,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (checkCORS(request, response) && METHOD_OPTIONS.equals(request.getMethod())) {
-            String method = request.getHeader(HEADER_ACCESS_CONTROL_REQUEST_METHOD);
-            if (method != null) {
-                response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_METHODS, method);
-                response.setHeader(HEADER_ALLOW, ALLOW_VALUE);
-            }
-            String headers = request.getHeader(HEADER_ACCESS_CONTROL_REQUEST_HEADERS);
-            if (headers != null) {
-                response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, headers);
-            }
-            response.setContentType(MIMETYPE_TEXT_PLAIN);
-        }
+        processCORS(request, response, corsDomainsRegex);
         super.service(request, response);
     }
 
@@ -227,6 +223,13 @@ public class UploadServlet extends HttpServlet implements Servlet {
         PER_THREAD_REQUEST.set(request);
         String error;
         try {
+            final Token<UploadClaim> uploadToken;
+            if (tokenValidator != null) {
+                uploadToken = tokenValidator.parseUploadToken(request.getHeader(HEADER_TOKEN));
+                requireNonNull(uploadToken, "Missing token (" + HEADER_TOKEN + " HTTP header) to upload file");
+            } else {
+                uploadToken = null;
+            }
             error = parsePostRequest(request, response);
             String postResponse = "";
             Map<String, String> stat = new HashMap<>();
@@ -235,6 +238,15 @@ public class UploadServlet extends HttpServlet implements Servlet {
             } else {
                 List<String> allFiles = new ArrayList<>();
                 for (org.apache.commons.fileupload.FileItem f : getMyLastReceivedFileItems(request)) {
+                    final String expectedMimeType = uploadToken != null ? uploadToken.get(UploadClaim.FILE_MIME_TYPE, String.class) : null;
+                    if (expectedMimeType != null) {
+                        final String uploadedMimeType = f.getContentType();
+                        if (f.getContentType() == null
+                                || !expectedMimeType.equals(uploadedMimeType)
+                                && !(expectedMimeType.endsWith("/*") && uploadedMimeType.startsWith(expectedMimeType.substring(0, expectedMimeType.length() - 1)))) {
+                            throw new IllegalArgumentException("Invalid MIME type: " + uploadedMimeType + " (expected: " + expectedMimeType + ")");
+                        }
+                    }
                     try (InputStream data = f.getInputStream()) {
                         String id = fileStoreService.put(data, f.getName(), f.getContentType());
                         URL url = fileStoreService.getAccessUrl(id);
@@ -242,7 +254,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
                                 f.getFieldName(), id, f.getName(), url.toString(), f.getContentType(), f.getSize()));
                     }
                 }
-                postResponse = "{\"files\":[" + join(",", allFiles) + "],\"finished\":\"ok\"}";
+                postResponse = "{\"files\":[" + String.join(",", allFiles) + "],\"finished\":\"ok\"}";
             }
             finish(request, postResponse);
             renderMessage(response, postResponse, MIMETYPE_APPLICATION_JSON);
@@ -258,23 +270,6 @@ public class UploadServlet extends HttpServlet implements Servlet {
         } finally {
             PER_THREAD_REQUEST.set(null);
         }
-    }
-
-    protected boolean checkCORS(HttpServletRequest request, HttpServletResponse response) {
-        String origin = request.getHeader("Origin");
-        if (origin != null && origin.matches(corsDomainsRegex)) {
-            // Maybe the user has used this domain before and has a session-cookie, we delete it
-            //   Cookie c  = new Cookie("JSESSIONID", "");
-            //   c.setMaxAge(0);
-            //   response.addCookie(c);
-            // All doXX methods should set these header
-            response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-            response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, TRUE);
-            return true;
-        } else if (origin != null) {
-            log.warn(String.format(MSG_CHECK_CORS_ERROR_ORIGIN_S_DOES_NOT_MATCH_S, origin, corsDomainsRegex));
-        }
-        return false;
     }
 
     protected Map<String, String> getFileItemsSummary(HttpServletRequest request, Map<String, String> pStat) {
@@ -538,16 +533,5 @@ public class UploadServlet extends HttpServlet implements Servlet {
         if (listener != null) {
             listener.remove();
         }
-    }
-
-    static String join(String separator, List<String> items) {
-        StringBuilder sb = new StringBuilder();
-        for (String part : items) {
-            if (sb.length() != 0) {
-                sb.append(separator);
-            }
-            sb.append(part);
-        }
-        return sb.toString();
     }
 }

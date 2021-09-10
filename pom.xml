@@ -482,6 +482,7 @@
     
     <profiles>
         <profile>
+            <id>modules</id>
             <activation>
                 <property>
                     <name>github_release</name>
@@ -495,6 +496,8 @@
                 <module>filestore-urlhandler</module>
                 <module>filestore-filesystem</module>
                 <module>filestore-rdbms</module>
+                <module>filestore-security-api</module>
+                <module>filestore-security</module>
                 <module>filestore-servlet</module>
                 <module>features</module>
                 <module>kar</module>
