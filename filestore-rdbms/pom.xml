@@ -5,7 +5,6 @@
         <groupId>hu.blackbelt.osgi.filestore</groupId>
         <artifactId>parent</artifactId>
         <version>1.1.2-SNAPSHOT</version>
-        <relativePath>../</relativePath>
     </parent>
 
     <artifactId>filestore-rdbms</artifactId>
@@ -25,7 +24,7 @@
                         <Import-Package>
                             !javax.annotation,
                             !lombok,
-                            ,liquibase;version="[3,4)",
+                            ,liquibase;version="[4,5)",
                             *
                         </Import-Package>
                         <_sources>true</_sources>

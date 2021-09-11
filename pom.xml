@@ -46,7 +46,7 @@
         
         <osgi-utils-version>1.0.10</osgi-utils-version>
         <karaf-version>4.2.6</karaf-version>
-        <osgi-liquibase-version>1.1.1</osgi-liquibase-version>
+        <osgi-liquibase-version>1.2.0.20210911_224706_a60323b_feature_JNG_2524_UpdateLiquibase</osgi-liquibase-version>
 
     </properties>
 
