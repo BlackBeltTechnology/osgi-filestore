@@ -126,19 +126,22 @@ public class RdbmsFileStoreService implements FileStoreService {
     }
 
     @Override
-    public boolean exists(String fileId) {
+    public boolean exists(String id) {
+        String fileId = getStrippedId(id);
         Integer count = jdbcTemplate.queryForObject(count(table, fileId), Integer.class);
         return count == 1;
     }
 
     @Override
-    public InputStream get(String fileId) {
+    public InputStream get(String id) {
+        String fileId = getStrippedId(id);
         return jdbcTemplate.queryForObject(read(table, fileId, DATA_FIELD),
                 (rs, rowNum) -> rs.getBinaryStream(DATA_FIELD));
     }
 
     @Override
-    public String getMimeType(String fileId) {
+    public String getMimeType(String id) {
+        String fileId = getStrippedId(id);
         try {
             return (String) metaCache.get(fileId).get(MIME_TYPE_FIELD);
         } catch (NullPointerException | UncheckedExecutionException | IncorrectResultSizeDataAccessException | ExecutionException e) {
@@ -147,7 +150,8 @@ public class RdbmsFileStoreService implements FileStoreService {
     }
 
     @Override
-    public String getFileName(String fileId) {
+    public String getFileName(String id) {
+        String fileId = getStrippedId(id);
         try {
             return (String) metaCache.get(fileId).get(FILENAME_FIELD);
         } catch (NullPointerException | UncheckedExecutionException | IncorrectResultSizeDataAccessException | ExecutionException e) {
@@ -156,7 +160,8 @@ public class RdbmsFileStoreService implements FileStoreService {
     }
 
     @Override
-    public long getSize(String fileId) {
+    public long getSize(String id) {
+        String fileId = getStrippedId(id);
         try {
             return (Long) metaCache.get(fileId).get(SIZE_FIELD);
         } catch (NullPointerException | UncheckedExecutionException | IncorrectResultSizeDataAccessException | ExecutionException e) {
@@ -165,7 +170,8 @@ public class RdbmsFileStoreService implements FileStoreService {
     }
 
     @Override
-    public Timestamp getCreateTime(String fileId) {
+    public Timestamp getCreateTime(String id) {
+        String fileId = getStrippedId(id);
         try {
             return (Timestamp) metaCache.get(fileId).get(CREATE_TIME_FIELD);
         } catch (NullPointerException | UncheckedExecutionException | IncorrectResultSizeDataAccessException | ExecutionException e) {
@@ -173,7 +179,8 @@ public class RdbmsFileStoreService implements FileStoreService {
         }
     }
 
-    private Map<String, ?> getMeta(String fileId) {
+    private Map<String, ?> getMeta(String id) {
+        String fileId = getStrippedId(id);
         return jdbcTemplate.queryForObject(meta(table, fileId),
                 (RowMapper<Map<String, ?>>) (rs, rowNum) -> ImmutableMap.of(
                     FILENAME_FIELD, rs.getString(FILENAME_FIELD),
@@ -184,7 +191,8 @@ public class RdbmsFileStoreService implements FileStoreService {
     }
 
     @Override
-    public URL getAccessUrl(String fileId) throws IOException {
+    public URL getAccessUrl(String id) throws IOException {
+        String fileId = getStrippedId(id);
         return new URL(protocol + ":" + fileId + '-' + getFileName(fileId));
     }
 
@@ -196,4 +204,13 @@ public class RdbmsFileStoreService implements FileStoreService {
     static boolean isNullOrEmpty(String string) {
         return string == null || string.length() == 0;
     }
+
+    private String getStrippedId(String id) {
+        String cleanedId = id;
+        if (id != null && id.startsWith(getProtocol()) && id.split(":").length >= 2) {
+            cleanedId = id.split(":")[1];
+        }
+        return cleanedId;
+    }
+
 }

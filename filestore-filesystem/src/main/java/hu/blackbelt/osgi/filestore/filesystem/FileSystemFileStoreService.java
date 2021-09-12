@@ -131,9 +131,9 @@ public class FileSystemFileStoreService implements FileStoreService {
     }
 
     @Override
-    public boolean exists(String fileId) {
-        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
-
+    public boolean exists(String id) {
+        Objects.requireNonNull(id, FILE_ID_CANNOT_BE_NULL);
+        String fileId = getStrippedId(id);
         try {
             return idToDataFile(fileId).exists();
         } catch (IOException e) {
@@ -142,16 +142,16 @@ public class FileSystemFileStoreService implements FileStoreService {
     }
 
     @Override
-    public InputStream get(String fileId) throws IOException {
-        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
-
+    public InputStream get(String id) throws IOException {
+        Objects.requireNonNull(id, FILE_ID_CANNOT_BE_NULL);
+        String fileId = getStrippedId(id);
         return Files.newInputStream(idToDataFile(fileId).toPath());
     }
 
     @Override
-    public String getMimeType(String fileId) throws IOException {
-        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
-
+    public String getMimeType(String id) throws IOException {
+        Objects.requireNonNull(id, FILE_ID_CANNOT_BE_NULL);
+        String fileId = getStrippedId(id);
         try {
             return (String) propertiesLoadingCache.get(fileId).get(MIME_TYPE);
         } catch (ExecutionException e) {
@@ -160,9 +160,9 @@ public class FileSystemFileStoreService implements FileStoreService {
     }
 
     @Override
-    public String getFileName(String fileId) throws IOException {
-        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
-
+    public String getFileName(String id) throws IOException {
+        Objects.requireNonNull(id, FILE_ID_CANNOT_BE_NULL);
+        String fileId = getStrippedId(id);
         try {
             return (String) propertiesLoadingCache.get(fileId).get(FILE_NAME);
         } catch (ExecutionException e) {
@@ -171,9 +171,9 @@ public class FileSystemFileStoreService implements FileStoreService {
     }
 
     @Override
-    public long getSize(String fileId) throws IOException {
-        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
-
+    public long getSize(String id) throws IOException {
+        Objects.requireNonNull(id, FILE_ID_CANNOT_BE_NULL);
+        String fileId = getStrippedId(id);
         try {
             return Long.parseLong((String) propertiesLoadingCache.get(fileId).get(SIZE));
         } catch (ExecutionException | NumberFormatException e) {
@@ -182,9 +182,9 @@ public class FileSystemFileStoreService implements FileStoreService {
     }
 
     @Override
-    public Date getCreateTime(String fileId) throws IOException {
-        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
-
+    public Date getCreateTime(String id) throws IOException {
+        Objects.requireNonNull(id, FILE_ID_CANNOT_BE_NULL);
+        String fileId = getStrippedId(id);
         try {
             Long createTime = Long.parseLong((String) propertiesLoadingCache.get(fileId).get(CREATE_DATE));
             return new Date(createTime);
@@ -194,11 +194,10 @@ public class FileSystemFileStoreService implements FileStoreService {
     }
 
     @Override
-    public URL getAccessUrl(String fileId) throws IOException {
-        Objects.requireNonNull(fileId, FILE_ID_CANNOT_BE_NULL);
-
+    public URL getAccessUrl(String id) throws IOException {
+        Objects.requireNonNull(id, FILE_ID_CANNOT_BE_NULL);
+        String fileId = getStrippedId(id);
         return new URL(protocol + ":" + fileId + MINUS + getFileName(fileId));
-        // return idToDataFile(fileId).toURI().toURL();
     }
 
     @Override
@@ -242,4 +241,13 @@ public class FileSystemFileStoreService implements FileStoreService {
         }
         return sb.toString();
     }
+
+    private String getStrippedId(String id) {
+        String cleanedId = id;
+        if (id != null && id.startsWith(getProtocol()) && id.split(":").length >= 2) {
+            cleanedId = id.split(":")[1];
+        }
+        return cleanedId;
+    }
+
 }

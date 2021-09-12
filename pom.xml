@@ -14,7 +14,8 @@
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.deploy.skip>false</maven.deploy.skip>
-        
+        <deployOnly>false</deployOnly>
+
         <java.version>1.8</java.version>
         <osgi.version>6.0.0</osgi.version>
         <osgi-ds.version>1.3.0</osgi-ds.version>
@@ -60,7 +61,8 @@
     <scm>
       <connection>scm:git:git@github.com:${project-repositoryId}.git
       </connection>
-      <developerConnection>scm:git:ssh://${git.username}@github.com:${project-repositoryId}.git
+      <!--suppress UnresolvedMavenProperty -->
+        <developerConnection>scm:git:ssh://${git.username}@github.com:${project-repositoryId}.git
       </developerConnection>
       <url>http://github.com/${project-repositoryId}</url>
     </scm>
@@ -366,6 +368,7 @@
                             <Implementation-Build>${buildNumber}</Implementation-Build>
                             <_dsannotations>*</_dsannotations>
                             <_metatypeannotations>*</_metatypeannotations>
+                            <!--suppress UnresolvedMavenProperty -->
                             <_include>${additional.manifest.file}</_include>
                             <Import-Package>
                                 !javax.annotation,
@@ -551,10 +554,12 @@
             <distributionManagement>
                 <snapshotRepository>
                     <id>judong-nexus-distribution</id>
+                    <!--suppress UnresolvedMavenProperty -->
                     <url>${env.JUDONG_MAVEN_UPSTREAM_SNAPSHOT}</url>
                 </snapshotRepository>
                 <repository>
                     <id>judong-nexus-distribution</id>
+                    <!--suppress UnresolvedMavenProperty -->
                     <url>${env.JUDONG_MAVEN_UPSTREAM_RELEASE}</url>
                 </repository>
             </distributionManagement>
