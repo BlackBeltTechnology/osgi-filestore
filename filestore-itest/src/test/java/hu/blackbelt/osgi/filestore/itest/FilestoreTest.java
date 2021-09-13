@@ -1,9 +1,6 @@
 package hu.blackbelt.osgi.filestore.itest;
 
-import hu.blackbelt.osgi.filestore.security.api.Token;
-import hu.blackbelt.osgi.filestore.security.api.TokenIssuer;
-import hu.blackbelt.osgi.filestore.security.api.TokenValidator;
-import hu.blackbelt.osgi.filestore.security.api.UploadClaim;
+import hu.blackbelt.osgi.filestore.security.api.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -15,6 +12,8 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 
 import javax.inject.Inject;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 import static hu.blackbelt.osgi.filestore.itest.utils.TestUtil.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -61,15 +60,30 @@ public class FilestoreTest {
     }
 
     @Test
-    public void testUploadAndDownload() {
+    public void testTokenServices() {
         final Token<UploadClaim> uploadToken = Token.<UploadClaim>builder()
                 .jwtClaim(UploadClaim.FILE_MIME_TYPE, "application/pdf")
                 .build();
 
         final String uploadTokenString = tokenIssuer.createUploadToken(uploadToken);
-        log.debug("Created upload token: {}", uploadTokenString);
+        log.info("Created upload token: {}", uploadTokenString);
         final Token<UploadClaim> decodedUploadToken = tokenValidator.parseUploadToken(uploadTokenString);
-        log.debug("Decoded upload token: {}", decodedUploadToken);
+        log.info("Decoded upload token: {}", decodedUploadToken);
         assertThat(decodedUploadToken, equalTo(uploadToken));
+
+        final Token<DownloadClaim> downloadToken = Token.<DownloadClaim>builder()
+                .jwtClaim(DownloadClaim.FILE_MIME_TYPE, "application/pdf")
+                .jwtClaim(DownloadClaim.FILE_ID, UUID.randomUUID().toString())
+                .jwtClaim(DownloadClaim.FILE_CREATED, OffsetDateTime.now())
+                .jwtClaim(DownloadClaim.FILE_NAME, "test.pdf")
+                .jwtClaim(DownloadClaim.FILE_SIZE, 10000L)
+                .jwtClaim(DownloadClaim.DISPOSITION, "attachment")
+                .build();
+
+        final String downloadTokenString = tokenIssuer.createDownloadToken(downloadToken);
+        log.info("Created download token: {}", downloadTokenString);
+        final Token<DownloadClaim> decodedDownloadToken = tokenValidator.parseDownloadToken(downloadTokenString);
+        log.info("Decoded download token: {}", decodedDownloadToken);
+        assertThat(decodedDownloadToken, equalTo(downloadToken));
     }
 }

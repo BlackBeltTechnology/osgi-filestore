@@ -45,7 +45,6 @@
                 <configuration>
                     <argLine>-Dfile.encoding=UTF-8</argLine>
                     <trimStackTrace>false</trimStackTrace>
-                    <forkedProcessExitTimeoutInSeconds>1</forkedProcessExitTimeoutInSeconds>
                 </configuration>
                 <dependencies>
                     <dependency>

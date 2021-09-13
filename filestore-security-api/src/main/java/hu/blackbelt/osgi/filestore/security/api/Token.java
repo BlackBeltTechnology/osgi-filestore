@@ -13,12 +13,24 @@ public class Token<C extends Token.Claim> {
     @Singular
     private final Map<C, Object> jwtClaims;
 
-    public <T> T get(C claim, Class<T> clazz) {
-        return (T) jwtClaims.get(claim);
+    public <T> T get(final C claim, final Class<T> clazz) {
+        final Object value = jwtClaims.get(claim);
+        if (value == null) {
+            return null;
+        }
+        if (clazz.isAssignableFrom(value.getClass())) {
+            return (T) value;
+        } else {
+            throw new IllegalArgumentException("Claim type mismatch");
+        }
     }
 
     public interface Claim {
 
         String getJwtClaimName();
+
+        default Object convert(String value) {
+            return value;
+        }
     }
 }

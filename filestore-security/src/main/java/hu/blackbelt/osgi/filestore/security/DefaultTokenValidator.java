@@ -76,7 +76,7 @@ public class DefaultTokenValidator implements TokenValidator {
         return Token.<UploadClaim>builder()
                 .jwtClaims(parseToken(tokenString, UploadClaim.AUDIENCE).entrySet().stream()
                         .filter(e -> UploadClaim.getByJwtClaimName(e.getKey()) != null)
-                        .collect(Collectors.toMap(e -> UploadClaim.getByJwtClaimName(e.getKey()), e -> e.getValue())))
+                        .collect(Collectors.toMap(e -> UploadClaim.getByJwtClaimName(e.getKey()), e -> UploadClaim.getByJwtClaimName(e.getKey()).convert(String.valueOf(e.getValue())))))
                 .build();
     }
 
@@ -85,7 +85,7 @@ public class DefaultTokenValidator implements TokenValidator {
         return Token.<DownloadClaim>builder()
                 .jwtClaims(parseToken(tokenString, DownloadClaim.AUDIENCE).entrySet().stream()
                         .filter(e -> DownloadClaim.getByJwtClaimName(e.getKey()) != null)
-                        .collect(Collectors.toMap(e -> DownloadClaim.getByJwtClaimName(e.getKey()), e -> e.getValue())))
+                        .collect(Collectors.toMap(e -> DownloadClaim.getByJwtClaimName(e.getKey()), e -> DownloadClaim.getByJwtClaimName(e.getKey()).convert(String.valueOf(e.getValue())))))
                 .build();
     }
 }
