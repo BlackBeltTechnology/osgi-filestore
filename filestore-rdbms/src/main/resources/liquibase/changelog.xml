@@ -15,7 +15,7 @@
             <column name="FILENAME" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="DATA" type="BLOB">
+            <column name="DATA" type="LONGBLOB">
                 <constraints nullable="false"/>
             </column>
             <column name="SIZE" type="BIGINT">

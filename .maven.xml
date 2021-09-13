@@ -11,26 +11,31 @@
             <id>${env.GPG_KEYNAME}</id>
             <passphrase>${env.GPG_PASSPHRASE}</passphrase>
         </server>
+        
         <server>
             <id>github</id>
             <privateKey>${env.GITHUB_ACCESS_TOKEN}</privateKey>
         </server>
+        
         <server>
             <id>judong-nexus-distribution</id>
             <username>${env.JUDONG_NEXUS_USERNAME}</username>
             <password>${env.JUDONG_NEXUS_PASSWORD}</password>
         </server>
+        
         <server>
             <id>judong-nexus-mirror</id>
             <username>${env.JUDONG_NEXUS_USERNAME}</username>
             <password>${env.JUDONG_NEXUS_PASSWORD}</password>
         </server>
+
     </servers>
+    
     <mirrors>
         <mirror>
-            <id>internal-repository</id>
-            <name>Maven Repository Manager running on https://repo1.maven.org/maven2</name>
-            <url>https://repo1.maven.org/maven2</url>
+            <id>judong-nexus-mirror</id>
+            <name>judong-nexus-mirror</name>
+            <url>https://nexus.judo.technology/repository/maven-judong/</url>
             <mirrorOf>*</mirrorOf>
         </mirror>
     </mirrors>
@@ -47,7 +52,6 @@
                 <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
             </properties>
         </profile>
-
         <profile>
             <id>ossrh</id>
             <activation>
@@ -66,10 +70,4 @@
             </repositories>
         </profile>
     </profiles>
-    
-    
-    <pluginGroups>
-        <pluginGroup>com.amashchenko.maven.plugin</pluginGroup>
-    </pluginGroups>
-    
 </settings>
