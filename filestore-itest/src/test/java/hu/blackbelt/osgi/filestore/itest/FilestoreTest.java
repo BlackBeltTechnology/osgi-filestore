@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.OptionUtils.combine;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 
 @RunWith(PaxExam.class)
@@ -49,6 +50,8 @@ public class FilestoreTest {
 
                 features(karafStandardRepo()),
                 features(filestoreArtifact(), FEATURE_FILESTORE_SECURITY),
+
+                editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", "8181"),
 
                 newConfiguration("hu.blackbelt.osgi.filestore.security.DefaultTokenIssuer")
                         .put("secret", secret)
