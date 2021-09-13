@@ -10,8 +10,11 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.ops4j.pax.exam.util.Filter;
 
 import javax.inject.Inject;
+import javax.servlet.Servlet;
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -29,13 +32,22 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 @Slf4j
 public class FilestoreTest {
 
-    public static final String FEATURE_FILESTORE_SECURITY = "filestore-security";
+    public static final String FEATURE_FILESTORE_FULL = "filestore-full";
+    public static final String FEATURE_HTTP_CLIENT_4 = "apache-httpclient4";
 
     @Inject
     TokenIssuer tokenIssuer;
 
     @Inject
     TokenValidator tokenValidator;
+
+    @Inject
+    @Filter("(component.name=hu.blackbelt.osgi.filestore.servlet.UploadServlet)")
+    Servlet uploadServlet;
+
+    @Inject
+    @Filter("(component.name=hu.blackbelt.osgi.filestore.servlet.DownloadServlet)")
+    Servlet downloadServlet;
 
     @Configuration
     @SneakyThrows
@@ -45,13 +57,21 @@ public class FilestoreTest {
 
         return combine(karafConfig(this.getClass()),
 
-                systemProperty("org.ops4j.pax.exam.raw.extender.intern.Parser.DEFAULT_TIMEOUT").value("30000"),
-                systemProperty("pax.exam.service.timeout").value("30000"),
+                systemProperty("org.ops4j.pax.exam.raw.extender.intern.Parser.DEFAULT_TIMEOUT").value("120000"),
+                systemProperty("pax.exam.service.timeout").value("120000"),
 
-                features(karafStandardRepo()),
-                features(filestoreArtifact(), FEATURE_FILESTORE_SECURITY),
+                features(filestoreArtifact(), FEATURE_FILESTORE_FULL),
+                features(httpClientArtifact(), FEATURE_HTTP_CLIENT_4),
 
                 editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", "8181"),
+
+                newConfiguration("hu.blackbelt.osgi.filestore.filesystem.FileSystemFileStoreService")
+                        .put("protocol", "judostore").asOption(),
+
+                newConfiguration("hu.blackbelt.osgi.filestore.servlet.UploadServlet")
+                        .put("servletPath", "/upload").asOption(),
+                newConfiguration("hu.blackbelt.osgi.filestore.servlet.DownloadServlet")
+                        .put("servletPath", "/download").asOption(),
 
                 newConfiguration("hu.blackbelt.osgi.filestore.security.DefaultTokenIssuer")
                         .put("secret", secret)
@@ -63,7 +83,8 @@ public class FilestoreTest {
     }
 
     @Test
-    public void testTokenServices() {
+    @SneakyThrows
+    public void testTokenServices() throws IOException {
         final Token<UploadClaim> uploadToken = Token.<UploadClaim>builder()
                 .jwtClaim(UploadClaim.FILE_MIME_TYPE, "application/pdf")
                 .build();
@@ -88,5 +109,10 @@ public class FilestoreTest {
         final Token<DownloadClaim> decodedDownloadToken = tokenValidator.parseDownloadToken(downloadTokenString);
         log.info("Decoded download token: {}", decodedDownloadToken);
         assertThat(decodedDownloadToken, equalTo(downloadToken));
+
+//        final HttpClient client = HttpClientBuilder.create().build();
+//        final HttpPost uploadRequest = new HttpPost("http://localhost:8181/upload");
+//        final HttpResponse uploadResponse = client.execute(uploadRequest);
+//        assertThat(uploadResponse, equalTo(HttpStatus.SC_OK));
     }
 }

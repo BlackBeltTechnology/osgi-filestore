@@ -15,7 +15,9 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.*;
 import static org.ops4j.pax.exam.karaf.options.LogLevelOption.LogLevel.INFO;
 
 public class TestUtil {
+
     private static final String KARAF_VERSION = "4.2.11";
+    private static final String FEATURE_REPO_HTTP_CLIENT_VERSION = "1.0.0";
 
     public static MavenArtifactUrlReference karafStandardRepo() {
         return CoreOptions.maven().groupId("org.apache.karaf.features").artifactId("standard").versionAsInProject().classifier("features").type("xml");
@@ -93,6 +95,10 @@ public class TestUtil {
 
     public static MavenArtifactUrlReference filestoreArtifact() {
         return maven().groupId("hu.blackbelt.osgi.filestore").artifactId("features").versionAsInProject().classifier("features").type("xml");
+    }
+
+    public static MavenArtifactUrlReference httpClientArtifact() {
+        return maven().groupId("hu.blackbelt.karaf.features").artifactId("apache-httpclient-features").version(FEATURE_REPO_HTTP_CLIENT_VERSION).classifier("features").type("xml");
     }
 
     public static File getConfigFile(Class clazz, String path) {

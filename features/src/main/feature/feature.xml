@@ -5,6 +5,7 @@
         <feature>filestore-filesystem</feature>
         <feature>filestore-rdbms</feature>
         <feature>filestore-servlet</feature>
+        <feature>filestore-security</feature>
     </feature>
 
     <feature name="filestore-filesystem" version="${project.version}" description="BlackBelt :: Filestore :: Filesystem" install="false">

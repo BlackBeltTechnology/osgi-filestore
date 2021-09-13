@@ -13,6 +13,7 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -32,9 +33,9 @@ import static java.util.Objects.requireNonNull;
 /**
  * Download servlet.
  */
+@Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE, service = Servlet.class)
+@Designate(ocd = DownloadServlet.Config.class)
 @Slf4j
-@Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
-@Designate(ocd = UploadServlet.Config.class)
 public class DownloadServlet extends HttpServlet {
 
     @ObjectClassDefinition()
@@ -67,7 +68,6 @@ public class DownloadServlet extends HttpServlet {
         corsDomainsRegex = config.corsDomainRegex();
         servletPath = config.servletPath();
 
-        log.info(String.format(MSG_INIT_MAX_SIZE_D_UPLOAD_DELAY_D_CORS_REGEX_S, corsDomainsRegex));
         httpService.registerServlet(servletPath, this, null, null);
     }
 
