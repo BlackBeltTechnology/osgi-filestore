@@ -63,7 +63,6 @@
         <dependency>
             <groupId>org.bitbucket.b_c</groupId>
             <artifactId>jose4j</artifactId>
-            <version>${jose-version}</version>
         </dependency>
 
         <dependency>
@@ -87,8 +86,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <properties>
-        <jose-version>0.7.2</jose-version>
-    </properties>
 </project>

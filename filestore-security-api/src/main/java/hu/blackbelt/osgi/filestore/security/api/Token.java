@@ -1,13 +1,13 @@
 package hu.blackbelt.osgi.filestore.security.api;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Singular;
+import lombok.*;
 
 import java.util.Map;
 
 @Getter
 @Builder
+@EqualsAndHashCode
+@ToString
 public class Token<C extends Token.Claim> {
 
     @Singular

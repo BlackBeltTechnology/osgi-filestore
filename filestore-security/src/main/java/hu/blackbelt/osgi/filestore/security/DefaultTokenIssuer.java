@@ -1,7 +1,10 @@
 package hu.blackbelt.osgi.filestore.security;
 
-import hu.blackbelt.osgi.filestore.security.api.*;
-import lombok.extern.slf4j.Slf4j;
+import hu.blackbelt.osgi.filestore.security.api.DownloadClaim;
+import hu.blackbelt.osgi.filestore.security.api.Token;
+import hu.blackbelt.osgi.filestore.security.api.TokenIssuer;
+import hu.blackbelt.osgi.filestore.security.api.UploadClaim;
+import lombok.SneakyThrows;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.lang.JoseException;
@@ -11,10 +14,10 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.metatype.annotations.Designate;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Designate(ocd = TokenServiceConfig.class)
 @Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
-@Slf4j
 public class DefaultTokenIssuer implements TokenIssuer {
 
     private String algorithm;
@@ -32,6 +35,7 @@ public class DefaultTokenIssuer implements TokenIssuer {
         expirationTimeInMinutes = config.expirationTime();
     }
 
+    @SneakyThrows
     private String createToken(final Map<? extends Token.Claim, Object> claims, final String audience) {
         final JwtClaims jwtClaims = new JwtClaims();
 
@@ -46,6 +50,9 @@ public class DefaultTokenIssuer implements TokenIssuer {
             jwtClaims.setAudience((expectedAudiencePrefix != null ? expectedAudiencePrefix : "") + audience);
         }
         claims.forEach((claim, value) -> jwtClaims.setClaim(claim.getJwtClaimName(), value));
+        if (jwtClaims.getSubject() == null) {
+            jwtClaims.setSubject(UUID.randomUUID().toString());
+        }
 
         final JsonWebSignature jws = new JsonWebSignature();
         jws.setKey(keyProvider.getPrivateKey());

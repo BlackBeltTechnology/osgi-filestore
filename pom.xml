@@ -46,9 +46,9 @@
         <local-deploy.skip>false</local-deploy.skip>
         
         <osgi-utils-version>1.0.10</osgi-utils-version>
-        <karaf-version>4.2.6</karaf-version>
+        <karaf-version>4.3.3</karaf-version>
         <osgi-liquibase-version>1.2.0</osgi-liquibase-version>
-
+        <jose4j-version>0.7.2</jose4j-version>
     </properties>
 
     <url>https://github.com/${project-repositoryId}</url>
@@ -225,6 +225,12 @@
                 <groupId>hu.blackbelt.osgi.utils</groupId>
                 <artifactId>osgi-test</artifactId>
                 <version>${osgi-utils-version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.bitbucket.b_c</groupId>
+                <artifactId>jose4j</artifactId>
+                <version>${jose4j-version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -502,6 +508,7 @@
                 <module>filestore-security-api</module>
                 <module>filestore-security</module>
                 <module>filestore-servlet</module>
+                <module>filestore-itest</module>
                 <module>features</module>
                 <module>kar</module>
             </modules>

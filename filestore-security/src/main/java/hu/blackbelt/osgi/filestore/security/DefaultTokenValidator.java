@@ -1,6 +1,9 @@
 package hu.blackbelt.osgi.filestore.security;
 
-import hu.blackbelt.osgi.filestore.security.api.*;
+import hu.blackbelt.osgi.filestore.security.api.DownloadClaim;
+import hu.blackbelt.osgi.filestore.security.api.Token;
+import hu.blackbelt.osgi.filestore.security.api.TokenValidator;
+import hu.blackbelt.osgi.filestore.security.api.UploadClaim;
 import lombok.extern.slf4j.Slf4j;
 import org.jose4j.jwa.AlgorithmConstraints;
 import org.jose4j.jwt.JwtClaims;
@@ -15,8 +18,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static java.util.function.Function.identity;
 
 @Designate(ocd = TokenServiceConfig.class)
 @Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -40,7 +41,7 @@ public class DefaultTokenValidator implements TokenValidator {
 
     private Map<String, Object> parseToken(final String tokenString, final String audience) {
         final Map<String, Object> claims;
-        if (tokenString != null && tokenString.trim().isEmpty()) {
+        if (tokenString != null && !tokenString.trim().isEmpty()) {
             JwtConsumerBuilder jwtConsumerBuilder = new JwtConsumerBuilder()
                     .setRelaxVerificationKeyValidation()
                     .setRequireSubject()
@@ -61,6 +62,7 @@ public class DefaultTokenValidator implements TokenValidator {
                 final JwtClaims jwtClaims = jwtConsumer.processToClaims(tokenString.trim());
                 claims = jwtClaims.getClaimsMap();
             } catch (InvalidJwtException e) {
+                log.debug("Invalid JWT token: {}", e.getErrorDetails());
                 throw new IllegalStateException("Invalid token", e);
             }
         } else {
@@ -74,7 +76,7 @@ public class DefaultTokenValidator implements TokenValidator {
         return Token.<UploadClaim>builder()
                 .jwtClaims(parseToken(tokenString, UploadClaim.AUDIENCE).entrySet().stream()
                         .filter(e -> UploadClaim.getByJwtClaimName(e.getKey()) != null)
-                        .collect(Collectors.toMap(e -> UploadClaim.getByJwtClaimName(e.getKey()), identity())))
+                        .collect(Collectors.toMap(e -> UploadClaim.getByJwtClaimName(e.getKey()), e -> e.getValue())))
                 .build();
     }
 
@@ -83,7 +85,7 @@ public class DefaultTokenValidator implements TokenValidator {
         return Token.<DownloadClaim>builder()
                 .jwtClaims(parseToken(tokenString, DownloadClaim.AUDIENCE).entrySet().stream()
                         .filter(e -> DownloadClaim.getByJwtClaimName(e.getKey()) != null)
-                        .collect(Collectors.toMap(e -> DownloadClaim.getByJwtClaimName(e.getKey()), identity())))
+                        .collect(Collectors.toMap(e -> DownloadClaim.getByJwtClaimName(e.getKey()), e -> e.getValue())))
                 .build();
     }
 }
