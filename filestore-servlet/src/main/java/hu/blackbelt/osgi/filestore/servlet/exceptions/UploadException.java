@@ -1,4 +1,4 @@
-package hu.blackbelt.osgi.fileupload.exceptions;
+package hu.blackbelt.osgi.filestore.servlet.exceptions;
 
 /**
  * Exception thrown UploadServlet when an unexpected error happens

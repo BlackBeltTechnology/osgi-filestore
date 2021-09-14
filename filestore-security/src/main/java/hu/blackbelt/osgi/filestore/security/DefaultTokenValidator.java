@@ -4,6 +4,7 @@ import hu.blackbelt.osgi.filestore.security.api.DownloadClaim;
 import hu.blackbelt.osgi.filestore.security.api.Token;
 import hu.blackbelt.osgi.filestore.security.api.TokenValidator;
 import hu.blackbelt.osgi.filestore.security.api.UploadClaim;
+import hu.blackbelt.osgi.filestore.security.api.exceptions.InvalidTokenException;
 import lombok.extern.slf4j.Slf4j;
 import org.jose4j.jwa.AlgorithmConstraints;
 import org.jose4j.jwt.JwtClaims;
@@ -39,7 +40,7 @@ public class DefaultTokenValidator implements TokenValidator {
         expirationTimeInMinutes = config.expirationTime();
     }
 
-    private Map<String, Object> parseToken(final String tokenString, final String audience) {
+    private Map<String, Object> parseToken(final String tokenString, final String audience) throws InvalidTokenException {
         final Map<String, Object> claims;
         if (tokenString != null && !tokenString.trim().isEmpty()) {
             JwtConsumerBuilder jwtConsumerBuilder = new JwtConsumerBuilder()
@@ -63,7 +64,7 @@ public class DefaultTokenValidator implements TokenValidator {
                 claims = jwtClaims.getClaimsMap();
             } catch (InvalidJwtException e) {
                 log.debug("Invalid JWT token: {}", e.getErrorDetails());
-                throw new IllegalStateException("Invalid token", e);
+                throw new InvalidTokenException(e);
             }
         } else {
             claims = Collections.emptyMap();
@@ -72,7 +73,10 @@ public class DefaultTokenValidator implements TokenValidator {
     }
 
     @Override
-    public Token<UploadClaim> parseUploadToken(final String tokenString) {
+    public Token<UploadClaim> parseUploadToken(final String tokenString) throws InvalidTokenException {
+        if (tokenString == null) {
+            return null;
+        }
         return Token.<UploadClaim>builder()
                 .jwtClaims(parseToken(tokenString, UploadClaim.AUDIENCE).entrySet().stream()
                         .filter(e -> UploadClaim.getByJwtClaimName(e.getKey()) != null)
@@ -81,7 +85,10 @@ public class DefaultTokenValidator implements TokenValidator {
     }
 
     @Override
-    public Token<DownloadClaim> parseDownloadToken(final String tokenString) {
+    public Token<DownloadClaim> parseDownloadToken(final String tokenString) throws InvalidTokenException {
+        if (tokenString == null) {
+            return null;
+        }
         return Token.<DownloadClaim>builder()
                 .jwtClaims(parseToken(tokenString, DownloadClaim.AUDIENCE).entrySet().stream()
                         .filter(e -> DownloadClaim.getByJwtClaimName(e.getKey()) != null)

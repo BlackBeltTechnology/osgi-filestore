@@ -42,10 +42,11 @@ import static hu.blackbelt.osgi.filestore.servlet.Constants.TAG_MSG_START;
 import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_DELETED_TRUE;
 import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_ERROR_ITEM_NOT_FOUND;
 import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_TPL;
-import static hu.blackbelt.osgi.filestore.servlet.UploadServlet.PER_THREAD_REQUEST;
 
 @Slf4j
 public final class UploadUtils {
+
+    public static final ThreadLocal<HttpServletRequest> PER_THREAD_REQUEST = new ThreadLocal<>();
 
     private UploadUtils() { }
 

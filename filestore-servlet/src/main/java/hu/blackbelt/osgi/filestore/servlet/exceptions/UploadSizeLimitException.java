@@ -1,4 +1,4 @@
-package hu.blackbelt.osgi.fileupload.exceptions;
+package hu.blackbelt.osgi.filestore.servlet.exceptions;
 
 import hu.blackbelt.osgi.filestore.servlet.UploadUtils;
 

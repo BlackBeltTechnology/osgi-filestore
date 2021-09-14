@@ -1,7 +1,7 @@
 package hu.blackbelt.osgi.filestore.servlet;
 
-import hu.blackbelt.osgi.fileupload.exceptions.UploadActionException;
-import hu.blackbelt.osgi.fileupload.exceptions.UploadCanceledException;
+import hu.blackbelt.osgi.filestore.servlet.exceptions.UploadActionException;
+import hu.blackbelt.osgi.filestore.servlet.exceptions.UploadCanceledException;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletConfig;
@@ -15,18 +15,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static hu.blackbelt.osgi.filestore.servlet.Constants.PARAM_REMOVE;
-import static hu.blackbelt.osgi.filestore.servlet.Constants.TRUE;
-import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_CANCELED_S_CANCELED;
-import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_ERROR_S_ERROR;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.findFileItem;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.findItemByFieldName;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getMyLastReceivedFileItems;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getMySessionFileItems;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.removeSessionFileItems;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.removeUploadedFile;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.renderXmlResponse;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.statusToString;
+import static hu.blackbelt.osgi.filestore.servlet.Constants.*;
+import static hu.blackbelt.osgi.filestore.servlet.Constants.PARAM_KEEP_SESSION;
+import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.*;
 
 /**
  * <p>Class used to manipulate the data received in the server side.</p>
@@ -207,7 +198,7 @@ public class UploadAction extends UploadServlet {
             postResponse = statusToString(tags);
             renderXmlResponse(request, response, postResponse, true);
         }
-        finish(request, postResponse);
+        finish(request, postResponse, request.getParameter(PARAM_KEEP_SESSION) != null ? Boolean.parseBoolean(request.getParameter(PARAM_KEEP_SESSION)) : false);
 
         if (removeSessionFiles) {
             removeSessionFileItems(request, removeData);

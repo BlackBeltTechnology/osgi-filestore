@@ -21,9 +21,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>
-                            hu.blackbelt.osgi.filestore.security.api;version=${project.version}
-                        </Export-Package>
                         <Import-Package>
                             !javax.annotation,
                             !lombok,

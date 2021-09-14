@@ -39,7 +39,6 @@ public class HttpUtils {
             if (headers != null) {
                 response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, headers);
             }
-            response.setContentType(MIMETYPE_TEXT_PLAIN);
         }
     }
 }

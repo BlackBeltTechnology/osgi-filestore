@@ -4,6 +4,9 @@ import hu.blackbelt.osgi.filestore.api.FileStoreService;
 import hu.blackbelt.osgi.filestore.security.api.DownloadClaim;
 import hu.blackbelt.osgi.filestore.security.api.Token;
 import hu.blackbelt.osgi.filestore.security.api.TokenValidator;
+import hu.blackbelt.osgi.filestore.security.api.exceptions.InvalidTokenException;
+import hu.blackbelt.osgi.filestore.servlet.exceptions.MissingParameterException;
+import hu.blackbelt.osgi.filestore.servlet.exceptions.TokenRequiredException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.annotations.*;
@@ -25,10 +28,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static hu.blackbelt.osgi.filestore.servlet.Constants.*;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.copyFromInputStreamToOutputStream;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.renderJsonResponse;
+import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.*;
 import static hu.blackbelt.osgi.filestore.servlet.utils.HttpUtils.processCORS;
-import static java.util.Objects.requireNonNull;
 
 /**
  * Download servlet.
@@ -47,8 +48,6 @@ public class DownloadServlet extends HttpServlet {
         @AttributeDefinition(name = "Servlet path")
         String servletPath();
     }
-
-    public static final ThreadLocal<HttpServletRequest> PER_THREAD_REQUEST = new ThreadLocal<>();
 
     private String corsDomainsRegex;
     private String servletPath;
@@ -89,28 +88,32 @@ public class DownloadServlet extends HttpServlet {
             final Token<DownloadClaim> downloadToken;
             if (tokenValidator != null) {
                 downloadToken = tokenValidator.parseDownloadToken(request.getHeader(HEADER_TOKEN));
-                requireNonNull(downloadToken, "Missing token (" + HEADER_TOKEN + " HTTP header) to download file");
+                if (downloadToken == null) {
+                    throw new TokenRequiredException(UploadUtils.getMessage(KEY_MISSING_TOKEN, HEADER_TOKEN));
+                }
             } else {
                 downloadToken = null;
             }
             final String fileId = request.getParameter(PARAM_FILE_ID);
-            requireNonNull(fileId, "Missing fileId HTTP parameter");
+            if (fileId == null) {
+                throw new MissingParameterException(UploadUtils.getMessage(KEY_MISSING_PARAMETER, PARAM_FILE_ID));
+            }
 
             if (downloadToken != null) {
-                final String tokenFileId = downloadToken.get(DownloadClaim.FILE_ID, String.class);
+                final String tokenFileId = (String) downloadToken.get(DownloadClaim.FILE_ID);
                 if (!Objects.equals(fileId, tokenFileId)) {
-                    throw new IllegalArgumentException("Invalid token");
+                    throw new InvalidTokenException(null);
                 }
             }
             String fileName = fileStoreService.getFileName(fileId);
             String contentType = fileStoreService.getMimeType(fileId);
             long size = fileStoreService.getSize(fileId);
-            final Optional<String> disposition = Optional.ofNullable(downloadToken).map(t -> t.get(DownloadClaim.DISPOSITION, String.class));
+            final Optional<String> disposition = Optional.ofNullable(downloadToken).map(t -> (String) t.get(DownloadClaim.DISPOSITION));
             if (fileName == null && downloadToken != null) {
-                fileName = downloadToken.get(DownloadClaim.FILE_NAME, String.class);
+                fileName = (String) downloadToken.get(DownloadClaim.FILE_NAME);
             }
             if (contentType == null && downloadToken != null) {
-                contentType = downloadToken.get(DownloadClaim.FILE_MIME_TYPE, String.class);
+                contentType = (String) downloadToken.get(DownloadClaim.FILE_MIME_TYPE);
             }
             if (fileName != null) {
                 response.setHeader("Content-Disposition", disposition.orElse("attachment") + "; filename=\"" + fileName + "\"");
@@ -128,7 +131,21 @@ public class DownloadServlet extends HttpServlet {
             final OutputStream out = response.getOutputStream();
 
             copyFromInputStreamToOutputStream(in, out);
+        } catch (TokenRequiredException e) {
+            response.setContentType(MIMETYPE_TEXT_PLAIN);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            renderJsonResponse(request, response, String.format(XML_ERROR_S_ERROR, e.getMessage()));
+        } catch (InvalidTokenException e) {
+            response.setContentType(MIMETYPE_TEXT_PLAIN);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            renderJsonResponse(request, response, String.format(XML_ERROR_S_ERROR, UploadUtils.getMessage(KEY_INVALID_TOKEN)));
+        } catch (MissingParameterException e) {
+            response.setContentType(MIMETYPE_TEXT_PLAIN);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            renderJsonResponse(request, response, String.format(XML_ERROR_S_ERROR, e.getMessage()));
         } catch (Exception e) {
+            response.setContentType(MIMETYPE_TEXT_PLAIN);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             log.error(String.format(MSG_S_EXCEPTION_S, request.getSession().getId(), e.getMessage()), e);
             renderJsonResponse(request, response, String.format(XML_ERROR_S_ERROR, e.getMessage()));
         } finally {

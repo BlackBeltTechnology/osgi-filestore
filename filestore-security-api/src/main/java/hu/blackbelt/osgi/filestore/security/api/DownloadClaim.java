@@ -11,18 +11,18 @@ import java.util.Objects;
 @AllArgsConstructor
 public enum DownloadClaim implements Token.Claim {
 
-    FILE_ID("fileId"),
+    FILE_ID("sub"),
     FILE_NAME("fileName"),
     FILE_SIZE("fileSize") {
         @Override
-        public Object convert(String value) {
-            return value != null ? Long.parseLong(value) : null;
+        public Object convert(Object value) {
+            return value != null ? Long.parseLong(value.toString()) : null;
         }
     },
     FILE_CREATED("fileCreated") {
         @Override
-        public Object convert(String value) {
-            return value != null ? OffsetDateTime.parse(value) : null;
+        public Object convert(Object value) {
+            return value != null ? OffsetDateTime.parse(value.toString()) : null;
         }
     },
     FILE_MIME_TYPE("mimeType"),
