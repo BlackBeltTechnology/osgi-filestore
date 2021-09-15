@@ -26,7 +26,8 @@ public enum DownloadClaim implements Token.Claim {
         }
     },
     FILE_MIME_TYPE("mimeType"),
-    DISPOSITION("disposition");
+    DISPOSITION("disposition"),
+    CONTEXT("ctx");
 
     public static final String AUDIENCE = "Download";
 

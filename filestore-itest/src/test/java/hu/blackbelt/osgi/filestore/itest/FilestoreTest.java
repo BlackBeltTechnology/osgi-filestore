@@ -32,14 +32,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static hu.blackbelt.osgi.filestore.itest.utils.TestUtil.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.text.StringContainsInOrder.stringContainsInOrder;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.OptionUtils.combine;
@@ -112,11 +110,18 @@ public class FilestoreTest {
     @Test
     @SneakyThrows
     public void testTokenServices() {
+        final Map<String, Object> context = new TreeMap<>();
+        context.put("ACTOR", "AdminActor");
+        context.put("USER", "testuser");
+        final String contextString = JsonUtil.toJson(context);
+
         final Token<UploadClaim> pdfUploadToken = Token.<UploadClaim>builder()
                 .jwtClaim(UploadClaim.FILE_MIME_TYPE_LIST, "application/pdf")
+                .jwtClaim(UploadClaim.CONTEXT, contextString)
                 .build();
         final Token<UploadClaim> textUploadToken = Token.<UploadClaim>builder()
                 .jwtClaim(UploadClaim.FILE_MIME_TYPE_LIST, "application/pdf,text/plain,application/vnd.oasis.opendocument.text,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                .jwtClaim(UploadClaim.CONTEXT, contextString)
                 .build();
 
         final String pdfUploadTokenString = tokenIssuer.createUploadToken(pdfUploadToken);
@@ -148,6 +153,11 @@ public class FilestoreTest {
         final String downloadTokenString = (String) filesOfUploadResponse.get(0).get("token");
         final Token<DownloadClaim> decodedDownloadToken = tokenValidator.parseDownloadToken(downloadTokenString);
         log.info("Decoded download token: {}", decodedDownloadToken);
+        assertThat(decodedDownloadToken.get(DownloadClaim.FILE_NAME), equalTo("sample.txt"));
+        assertThat(decodedDownloadToken.get(DownloadClaim.FILE_MIME_TYPE), equalTo("text/plain"));
+        assertThat(decodedDownloadToken.get(DownloadClaim.FILE_SIZE), equalTo((long) getSampleTextBytes().length));
+        assertThat(decodedDownloadToken.get(DownloadClaim.CONTEXT), notNullValue());
+        assertThat(JsonUtil.parseJson((String) decodedDownloadToken.get(DownloadClaim.CONTEXT)), equalTo(context));
 
         final HttpGet downloadRequestWithoutToken = getDownloadRequest(null, null);
         assertThat(execute(downloadRequestWithoutToken), equalTo(HttpStatus.SC_FORBIDDEN));

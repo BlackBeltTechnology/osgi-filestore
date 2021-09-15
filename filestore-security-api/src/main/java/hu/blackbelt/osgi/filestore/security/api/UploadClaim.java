@@ -10,7 +10,8 @@ import java.util.Objects;
 @AllArgsConstructor
 public enum UploadClaim implements Token.Claim {
 
-    FILE_MIME_TYPE_LIST("mimeTypeList");
+    FILE_MIME_TYPE_LIST("mimeTypeList"),
+    CONTEXT("ctx");
 
     public static final String AUDIENCE = "Upload";
 
