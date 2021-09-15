@@ -13,6 +13,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jose4j.json.JsonUtil;
 import org.junit.Before;
@@ -126,17 +127,17 @@ public class FilestoreTest {
         log.info("Decoded upload token for PDF files: {}", decodedUploadToken);
         assertThat(decodedUploadToken, equalTo(pdfUploadToken));
 
-        final HttpPost uploadRequestWithoutToken = getUploadRequest(null);
+        final HttpPost uploadRequestWithoutToken = getUploadRequest(null, false);
         assertThat(execute(uploadRequestWithoutToken), equalTo(HttpStatus.SC_FORBIDDEN));
 
-        final HttpPost uploadRequestWithInvalidToken = getUploadRequest(pdfUploadTokenString);
+        final HttpPost uploadRequestWithInvalidToken = getUploadRequest(pdfUploadTokenString, false);
         final HttpResponse uploadResponseWithInvalidToken = client.execute(uploadRequestWithInvalidToken);
         final String uploadResponseMessageWithInvalidToken = IOUtils.toString(uploadResponseWithInvalidToken.getEntity().getContent());
         log.info("Response: {}\n{}", uploadResponseWithInvalidToken, uploadResponseMessageWithInvalidToken);
         assertThat(uploadResponseWithInvalidToken.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_OK));
         assertThat(uploadResponseMessageWithInvalidToken, stringContainsInOrder(Arrays.asList("Invalid MIME type: text/plain, expected: [application/pdf]")));
 
-        final HttpPost uploadRequest = getUploadRequest(textUploadTokenString);
+        final HttpPost uploadRequest = getUploadRequest(textUploadTokenString, true);
         final HttpResponse uploadResponse = client.execute(uploadRequest);
         final String uploadResponseMessage = IOUtils.toString(uploadResponse.getEntity().getContent());
         final Map<String, Object> uploadResponseJson = JsonUtil.parseJson(uploadResponseMessage);
@@ -161,19 +162,50 @@ public class FilestoreTest {
         assertThat(Optional.ofNullable(downloadResponse.getEntity().getContentType()).map(h -> h.getValue()).orElse(null), stringContainsInOrder(Arrays.asList((String) decodedDownloadToken.get(DownloadClaim.FILE_MIME_TYPE))));
         final String downloadResponseContent = IOUtils.toString(downloadResponse.getEntity().getContent());
         log.info("Response: {}\n{}", downloadResponse, downloadResponseContent);
-        assertThat(downloadResponseContent, equalTo(IOUtils.toString(getSampleTextInputString())));
+        assertThat(downloadResponseContent, equalTo(new String(getSampleTextBytes())));
         assertThat(downloadResponse.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_OK));
+
+        // test downloading with new token
+        final Token<DownloadClaim> downloadToken2 = Token.<DownloadClaim>builder()
+                .jwtClaim(DownloadClaim.FILE_ID, decodedDownloadToken.get(DownloadClaim.FILE_ID))
+                .jwtClaim(DownloadClaim.DISPOSITION, "attachment")
+                .build();
+        final String downloadToken2String = tokenIssuer.createDownloadToken(downloadToken2);
+
+        final HttpGet downloadRequest2 = getDownloadRequest(downloadToken2String, id);
+        final HttpResponse downloadResponse2 = client.execute(downloadRequest2);
+        assertThat(Optional.ofNullable(downloadResponse2.getFirstHeader("Content-Disposition")).map(h -> h.getValue()).orElse(null), equalTo("attachment; filename=\"" + decodedDownloadToken.get(DownloadClaim.FILE_NAME) + "\""));
+        assertThat(downloadResponse2.getEntity().getContentLength(), equalTo(decodedDownloadToken.get(DownloadClaim.FILE_SIZE)));
+        assertThat(Optional.ofNullable(downloadResponse2.getEntity().getContentType()).map(h -> h.getValue()).orElse(null), stringContainsInOrder(Arrays.asList((String) decodedDownloadToken.get(DownloadClaim.FILE_MIME_TYPE))));
+        final String downloadResponseContent2 = IOUtils.toString(downloadResponse2.getEntity().getContent());
+        log.info("Response: {}\n{}", downloadResponse2, downloadResponseContent2);
+        assertThat(downloadResponseContent2, equalTo(new String(getSampleTextBytes())));
+        assertThat(downloadResponse2.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_OK));
     }
 
-    private static InputStream getSampleTextInputString() {
-        return new ByteArrayInputStream("árvíztűrő tükörfúrógép".getBytes(StandardCharsets.UTF_8));
+    private static byte[] getSampleTextBytes() {
+        return "árvíztűrő tükörfúrógép".getBytes(StandardCharsets.UTF_8);
     }
 
-    private HttpPost getUploadRequest(final String token) {
+    private static InputStream getSampleTextInputStream() {
+        return new ByteArrayInputStream(getSampleTextBytes());
+    }
+
+    private HttpPost getUploadRequest(final String token, final boolean setContentLength) {
         final HttpPost uploadRequest = new HttpPost("http://localhost:8181/upload");
         final MultipartEntityBuilder uploadRequestEntity = MultipartEntityBuilder.create();
         uploadRequestEntity.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-        uploadRequestEntity.addBinaryBody("upstream", getSampleTextInputString(), ContentType.create("text/plain"), "sample.txt");
+        if (setContentLength) {
+            // using addPart(String, InputStreamBody) instead of addBinaryBody so Content-Length HTTP header is set
+            uploadRequestEntity.addPart("upstream", new InputStreamBody(getSampleTextInputStream(), ContentType.create("text/plain"), "sample.txt") {
+                @Override
+                public long getContentLength() {
+                    return getSampleTextBytes().length;
+                }
+            });
+        } else {
+            uploadRequestEntity.addBinaryBody("upstream", getSampleTextInputStream(), ContentType.create("text/plain"), "sample.txt");
+        }
         uploadRequest.setEntity(uploadRequestEntity.build());
         if (token != null) {
             uploadRequest.setHeader("X-Token", token);
