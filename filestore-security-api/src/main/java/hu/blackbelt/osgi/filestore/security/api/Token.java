@@ -7,7 +7,6 @@ import java.util.Map;
 @Getter
 @Builder
 @EqualsAndHashCode
-@ToString
 public class Token<C extends Token.Claim> {
 
     @Singular
@@ -19,6 +18,11 @@ public class Token<C extends Token.Claim> {
             return null;
         }
         return claim.convert(value);
+    }
+
+    @Override
+    public String toString() {
+        return jwtClaims.toString();
     }
 
     public interface Claim {
