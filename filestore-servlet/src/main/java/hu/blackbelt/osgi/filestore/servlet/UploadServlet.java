@@ -59,6 +59,9 @@ public class UploadServlet extends HttpServlet implements Servlet {
 
         @AttributeDefinition(name = "Servlet path")
         String servletPath();
+
+        @AttributeDefinition(required = false, name = "Token required", description = "Enforce token check", type = AttributeType.BOOLEAN)
+        boolean tokenRequired() default false;
     }
 
     protected long maxSize;
@@ -67,6 +70,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
     protected int uploadDelay;
     private String corsDomainsRegex;
     private String servletPath;
+    private boolean tokenRequired;
 
     @Reference
     private HttpService httpService;
@@ -92,6 +96,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
         uploadDelay = config.slowUploads();
         corsDomainsRegex = config.corsDomainRegex();
         servletPath = config.servletPath();
+        tokenRequired = config.tokenRequired();
 
         log.info(String.format(MSG_INIT_MAX_SIZE_D_UPLOAD_DELAY_D_CORS_REGEX_S, maxSize, uploadDelay, corsDomainsRegex));
         httpService.registerServlet(servletPath, this, null, null);
@@ -209,6 +214,9 @@ public class UploadServlet extends HttpServlet implements Servlet {
         PER_THREAD_REQUEST.set(request);
         String error;
         try {
+            if (tokenRequired && (tokenValidator == null || tokenIssuer == null)) {
+                throw new IllegalStateException(UploadUtils.getMessage(KEY_NOT_READY));
+            }
             final Token<UploadClaim> uploadToken;
             if (tokenValidator != null) {
                 uploadToken = tokenValidator.parseUploadToken(request.getHeader(HEADER_TOKEN));

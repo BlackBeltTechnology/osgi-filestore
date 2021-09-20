@@ -117,5 +117,7 @@ public final class Constants {
     public static final String KEY_INVALID_MIME_TYPE = "invalid_mime_type";
     public static final String KEY_INVALID_TOKEN = "invalid_token";
 
+    public static final String KEY_NOT_READY = "not_ready";
+
     private Constants() { }
 }

@@ -13,6 +13,7 @@ import org.osgi.service.component.annotations.*;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.AttributeType;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
@@ -47,10 +48,14 @@ public class DownloadServlet extends HttpServlet {
 
         @AttributeDefinition(name = "Servlet path")
         String servletPath();
+
+        @AttributeDefinition(required = false, name = "Token required", description = "Enforce token check", type = AttributeType.BOOLEAN)
+        boolean tokenRequired() default false;
     }
 
     private String corsDomainsRegex;
     private String servletPath;
+    private boolean tokenRequired;
 
     @Reference
     private HttpService httpService;
@@ -66,6 +71,7 @@ public class DownloadServlet extends HttpServlet {
     protected void activate(DownloadServlet.Config config) {
         corsDomainsRegex = config.corsDomainRegex();
         servletPath = config.servletPath();
+        tokenRequired = config.tokenRequired();
 
         httpService.registerServlet(servletPath, this, null, null);
     }
@@ -85,6 +91,9 @@ public class DownloadServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         PER_THREAD_REQUEST.set(request);
         try {
+            if (tokenRequired && tokenValidator == null) {
+                throw new IllegalStateException(UploadUtils.getMessage(KEY_NOT_READY));
+            }
             final Token<DownloadClaim> downloadToken;
             if (tokenValidator != null) {
                 downloadToken = tokenValidator.parseDownloadToken(request.getHeader(HEADER_TOKEN));
