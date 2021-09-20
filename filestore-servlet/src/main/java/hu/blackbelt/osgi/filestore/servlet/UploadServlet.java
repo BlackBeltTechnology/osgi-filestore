@@ -71,13 +71,13 @@ public class UploadServlet extends HttpServlet implements Servlet {
     @Reference
     private HttpService httpService;
 
-    @Reference
-    private FileStoreService fileStoreService;
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
+    FileStoreService fileStoreService;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Reference(policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.OPTIONAL)
     TokenValidator tokenValidator;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Reference(policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.OPTIONAL)
     TokenIssuer tokenIssuer;
 
     public UploadServlet() {

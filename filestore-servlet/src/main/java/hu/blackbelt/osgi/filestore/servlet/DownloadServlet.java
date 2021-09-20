@@ -55,10 +55,10 @@ public class DownloadServlet extends HttpServlet {
     @Reference
     private HttpService httpService;
 
-    @Reference
-    private FileStoreService fileStoreService;
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
+    FileStoreService fileStoreService;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Reference(policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.OPTIONAL)
     TokenValidator tokenValidator;
 
     @Activate
