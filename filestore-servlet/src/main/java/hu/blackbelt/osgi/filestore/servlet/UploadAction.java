@@ -161,7 +161,7 @@ public class UploadAction extends UploadServlet {
         PER_THREAD_REQUEST.set(request);
         try {
             // Receive the files and form elements, updating the progress status
-            error = super.parsePostRequest(request, response);
+            error = super.parsePostRequest(request, response, null);
             if (error == null) {
                 // Fill files status before executing user code which could remove session files
                 getFileItemsSummary(request, tags);

@@ -218,7 +218,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
             } else {
                 uploadToken = null;
             }
-            error = parsePostRequest(request, response);
+            error = parsePostRequest(request, response, uploadToken != null ? (Long) UploadClaim.MAX_FILE_SIZE.convert(uploadToken.get(UploadClaim.MAX_FILE_SIZE)) : null);
             String postResponse = "";
             Map<String, String> stat = new HashMap<>();
             if (error != null && error.length() > 0) {
@@ -449,7 +449,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
      * <p>
      * returns null in the case of success or a string with the error
      */
-    protected String parsePostRequest(HttpServletRequest request, HttpServletResponse response) {
+    protected String parsePostRequest(HttpServletRequest request, HttpServletResponse response, Long maxFileSize) {
 
         /* Do not allow override upload parameters
         try {
@@ -489,8 +489,8 @@ public class UploadServlet extends HttpServlet implements Servlet {
             // Create the factory used for uploading files,
             org.apache.commons.fileupload.FileItemFactory factory = getFileItemFactory(getContentLength(request));
             org.apache.commons.fileupload.servlet.ServletFileUpload uploader = new org.apache.commons.fileupload.servlet.ServletFileUpload(factory);
-            uploader.setSizeMax(maxSize);
-            uploader.setFileSizeMax(maxFileSize);
+            uploader.setSizeMax(maxFileSize != null && maxFileSize > maxSize ? maxFileSize : maxSize);
+            uploader.setFileSizeMax(maxFileSize != null ? maxFileSize : this.maxFileSize);
             uploader.setProgressListener(listener);
 
             // Receive the files

@@ -15,13 +15,13 @@ public enum DownloadClaim implements Token.Claim {
     FILE_NAME("fileName"),
     FILE_SIZE("fileSize") {
         @Override
-        public Object convert(Object value) {
+        public Long convert(Object value) {
             return value != null ? Long.parseLong(value.toString()) : null;
         }
     },
     FILE_CREATED("fileCreated") {
         @Override
-        public Object convert(Object value) {
+        public OffsetDateTime convert(Object value) {
             return value != null ? OffsetDateTime.parse(value.toString()) : null;
         }
     },
