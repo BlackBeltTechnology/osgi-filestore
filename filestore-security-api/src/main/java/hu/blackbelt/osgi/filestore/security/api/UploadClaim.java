@@ -14,7 +14,7 @@ public enum UploadClaim implements Token.Claim {
     MAX_FILE_SIZE("maxFileSize") {
         @Override
         public Long convert(Object value) {
-            return value != null ? Long.parseLong(value.toString()) : null;
+            return value != null ? Double.valueOf(value.toString()).longValue() : null;
         }
     },
     CONTEXT("ctx");

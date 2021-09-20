@@ -16,7 +16,7 @@ public enum DownloadClaim implements Token.Claim {
     FILE_SIZE("fileSize") {
         @Override
         public Long convert(Object value) {
-            return value != null ? Long.parseLong(value.toString()) : null;
+            return value != null ? Double.valueOf(value.toString()).longValue() : null;
         }
     },
     FILE_CREATED("fileCreated") {
