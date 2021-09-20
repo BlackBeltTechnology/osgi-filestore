@@ -162,8 +162,8 @@ public class FilestoreTest {
         final HttpGet downloadRequestWithoutToken = getDownloadRequest(null, null);
         assertThat(execute(downloadRequestWithoutToken), equalTo(HttpStatus.SC_FORBIDDEN));
 
-        final HttpGet downloadRequestWithoutId = getDownloadRequest(downloadTokenString, null);
-        assertThat(execute(downloadRequestWithoutId), equalTo(HttpStatus.SC_BAD_REQUEST));
+        final HttpGet downloadRequestWithoutId = getDownloadRequest(downloadTokenString, UUID.randomUUID().toString());
+        assertThat(execute(downloadRequestWithoutId), equalTo(HttpStatus.SC_FORBIDDEN));
 
         final HttpGet downloadRequest = getDownloadRequest(downloadTokenString, id);
         final HttpResponse downloadResponse = client.execute(downloadRequest);
@@ -182,7 +182,7 @@ public class FilestoreTest {
                 .build();
         final String downloadToken2String = tokenIssuer.createDownloadToken(downloadToken2);
 
-        final HttpGet downloadRequest2 = getDownloadRequest(downloadToken2String, id);
+        final HttpGet downloadRequest2 = getDownloadRequest(downloadToken2String, null);
         final HttpResponse downloadResponse2 = client.execute(downloadRequest2);
         assertThat(Optional.ofNullable(downloadResponse2.getFirstHeader("Content-Disposition")).map(h -> h.getValue()).orElse(null), equalTo("attachment; filename=\"" + decodedDownloadToken.get(DownloadClaim.FILE_NAME) + "\""));
         assertThat(downloadResponse2.getEntity().getContentLength(), equalTo(decodedDownloadToken.get(DownloadClaim.FILE_SIZE)));

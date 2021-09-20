@@ -94,16 +94,17 @@ public class DownloadServlet extends HttpServlet {
             } else {
                 downloadToken = null;
             }
-            final String fileId = request.getParameter(PARAM_FILE_ID);
-            if (fileId == null) {
-                throw new MissingParameterException(UploadUtils.getMessage(KEY_MISSING_PARAMETER, PARAM_FILE_ID));
-            }
+            String fileId = request.getParameter(PARAM_FILE_ID);
 
             if (downloadToken != null) {
                 final String tokenFileId = (String) downloadToken.get(DownloadClaim.FILE_ID);
-                if (!Objects.equals(fileId, tokenFileId)) {
+                if (fileId != null && !Objects.equals(fileId, tokenFileId)) {
                     throw new InvalidTokenException(null);
+                } else if (fileId == null) {
+                    fileId = tokenFileId;
                 }
+            } else if (fileId == null) {
+                throw new MissingParameterException(UploadUtils.getMessage(KEY_MISSING_PARAMETER, PARAM_FILE_ID));
             }
             String fileName = fileStoreService.getFileName(fileId);
             String contentType = fileStoreService.getMimeType(fileId);
