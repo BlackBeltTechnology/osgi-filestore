@@ -253,7 +253,6 @@ public class UploadServlet extends HttpServlet implements Servlet {
                                     .jwtClaim(DownloadClaim.FILE_NAME, f.getName())
                                     .jwtClaim(DownloadClaim.FILE_SIZE, f.getSize())
                                     .jwtClaim(DownloadClaim.FILE_MIME_TYPE, f.getContentType())
-                                    .jwtClaim(DownloadClaim.FILE_CREATED, OffsetDateTime.now())
                                     .jwtClaim(DownloadClaim.CONTEXT, uploadToken != null ? uploadToken.get(UploadClaim.CONTEXT) : null)
                                     .build());
                             allFiles.add(String.format("{\"field\":\"%s\",\"id\":\"%s\",\"name\":\"%s\",\"url\":\"%s\",\"ctype\":\"%s\",\"size\":%d,\"token\":\"%s\"}",

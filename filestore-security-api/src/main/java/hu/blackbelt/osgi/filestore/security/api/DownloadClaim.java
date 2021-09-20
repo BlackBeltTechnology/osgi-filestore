@@ -3,7 +3,6 @@ package hu.blackbelt.osgi.filestore.security.api;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -17,12 +16,6 @@ public enum DownloadClaim implements Token.Claim {
         @Override
         public Long convert(Object value) {
             return value != null ? Double.valueOf(value.toString()).longValue() : null;
-        }
-    },
-    FILE_CREATED("fileCreated") {
-        @Override
-        public OffsetDateTime convert(Object value) {
-            return value != null ? OffsetDateTime.parse(value.toString()) : null;
         }
     },
     FILE_MIME_TYPE("mimeType"),
