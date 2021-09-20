@@ -2,11 +2,14 @@ package hu.blackbelt.osgi.filestore.security.api;
 
 import lombok.*;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Getter
 @Builder
 @EqualsAndHashCode
+@ToString
 public class Token<C extends Token.Claim> {
 
     @Singular
@@ -20,9 +23,9 @@ public class Token<C extends Token.Claim> {
         return claim.convert(value);
     }
 
-    @Override
-    public String toString() {
-        return jwtClaims.toString();
+    public Map<String, Object> getClaims() {
+        return Collections.unmodifiableMap(jwtClaims.entrySet().stream()
+                .collect(Collectors.toMap(e -> e.getKey().getJwtClaimName(), e -> e.getKey().convert(e.getValue()))));
     }
 
     public interface Claim {
