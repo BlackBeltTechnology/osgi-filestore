@@ -237,7 +237,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
                     final Collection<String> expectedMimeTypeList = uploadToken != null && uploadToken.get(UploadClaim.FILE_MIME_TYPE_LIST) != null ? Arrays.asList(((String) uploadToken.get(UploadClaim.FILE_MIME_TYPE_LIST)).split("\\s*,\\s*")) : Collections.emptyList();
                     if (!expectedMimeTypeList.isEmpty()) {
                         final String uploadedMimeType = f.getContentType();
-                        if (f.getContentType() == null || expectedMimeTypeList.stream().noneMatch(m -> m.equals(uploadedMimeType) || m.endsWith("/*") && uploadedMimeType.startsWith(m.substring(0, m.length() - 1)))) {
+                        if (f.getContentType() == null || expectedMimeTypeList.stream().noneMatch(m -> m.equals(uploadedMimeType) || m.equals("*/*") || m.endsWith("/*") && uploadedMimeType.startsWith(m.substring(0, m.length() - 1)))) {
                             error = UploadUtils.getMessage(KEY_INVALID_MIME_TYPE, uploadedMimeType, expectedMimeTypeList);
                             allFiles.add(String.format("{\"field\":\"%s\",\"name\":\"%s\",\"ctype\":\"%s\",\"size\":%d,\"error\":\"%s\"}",
                                     f.getFieldName(), f.getName(), f.getContentType(), f.getSize(), error));
