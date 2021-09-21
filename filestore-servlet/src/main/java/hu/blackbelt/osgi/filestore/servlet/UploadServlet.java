@@ -130,10 +130,11 @@ public class UploadServlet extends HttpServlet implements Servlet {
      * Override this method if you want to check the request before it is passed
      * to commons-fileupload parser.
      *
-     * @param request
+     * @param request HTTP request
+     * @param maxSize max size
      * @throws RuntimeException
      */
-    public void checkRequest(HttpServletRequest request) {
+    public void checkRequest(HttpServletRequest request, long maxSize) {
         log.debug(String.format(MSG_S_PROCESING_A_REQUEST_WITH_SIZE_D_BYTES, request.getSession().getId(), getContentLength(request)));
         if (getContentLength(request) > maxSize) {
             throw new UploadSizeLimitException(maxSize, getContentLength(request));
@@ -491,7 +492,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
         try {
 
             // Call to a method which the user can override
-            checkRequest(request);
+            checkRequest(request, maxFileSize != null && maxFileSize > maxSize ? maxFileSize : maxSize);
 
             // Create the factory used for uploading files,
             org.apache.commons.fileupload.FileItemFactory factory = getFileItemFactory(getContentLength(request));
