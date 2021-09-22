@@ -91,7 +91,7 @@ public abstract class AbstractUploadListener implements org.apache.commons.fileu
      * @return percent
      */
     public long getPercent() {
-        return contentLength != 0 ? bytesRead * 100 / contentLength : 0;
+        return contentLength > 0 ? bytesRead * 100 / contentLength : 0;
     }
 
     /**

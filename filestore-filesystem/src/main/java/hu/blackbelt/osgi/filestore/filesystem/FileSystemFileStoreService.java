@@ -75,7 +75,7 @@ public class FileSystemFileStoreService implements FileStoreService {
 
     @Activate
     void activate(BundleContext context, Config config) {
-        dataStorePath = config.fileSystemStoreDirectory() != null ? config.fileSystemStoreDirectory() : DEFAULT_ROOT;
+        dataStorePath = config.fileSystemStoreDirectory() != null && !config.fileSystemStoreDirectory().trim().isEmpty() ? config.fileSystemStoreDirectory() : DEFAULT_ROOT;
         protocol = config.protocol();
         targetDir = new File(dataStorePath);
         targetDir.mkdirs();

@@ -5,6 +5,7 @@
         <feature>filestore-filesystem</feature>
         <feature>filestore-rdbms</feature>
         <feature>filestore-servlet</feature>
+        <feature>filestore-security</feature>
     </feature>
 
     <feature name="filestore-filesystem" version="${project.version}" description="BlackBelt :: Filestore :: Filesystem" install="false">
@@ -31,10 +32,19 @@
         <capability>osgi.service;effective:=active;objectClass=javax.sql.DataSource</capability>
     </feature>
 
+    <feature name="filestore-security" version="${project.version}" description="BlackBelt :: Filestore :: Security" install="false">
+        <feature dependency="true">scr</feature>
+        <bundle>mvn:${project.groupId}/filestore-security-api/${project.version}</bundle>
+        <bundle>mvn:${project.groupId}/filestore-security/${project.version}</bundle>
+        <bundle>mvn:org.bitbucket.b_c/jose4j/${jose4j-version}</bundle>
+        <bundle dependency="true">mvn:com.sun.activation/javax.activation/1.2.0</bundle>
+    </feature>
+
     <feature name="filestore-servlet" version="${project.version}" description="BlackBelt :: Filestore :: Servlet" install="false">
         <feature dependency="true">http</feature>
 
         <feature>filestore-ext-json</feature>
+        <feature>filestore-security</feature>
 
         <conditional>
             <condition>filestore-filesystem</condition>

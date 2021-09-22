@@ -58,6 +58,12 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>filestore-security-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>filestore-urlhandler</artifactId>
             <version>${project.version}</version>
         </dependency>

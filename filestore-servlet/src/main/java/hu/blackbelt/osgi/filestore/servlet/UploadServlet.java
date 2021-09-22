@@ -1,11 +1,8 @@
 package hu.blackbelt.osgi.filestore.servlet;
 
-import hu.blackbelt.osgi.fileupload.exceptions.UploadActionException;
-import hu.blackbelt.osgi.fileupload.exceptions.UploadCanceledException;
-import hu.blackbelt.osgi.fileupload.exceptions.UploadException;
-import hu.blackbelt.osgi.fileupload.exceptions.UploadSizeLimitException;
-import hu.blackbelt.osgi.fileupload.exceptions.UploadTimeoutException;
+import hu.blackbelt.osgi.filestore.security.api.*;
 import hu.blackbelt.osgi.filestore.api.FileStoreService;
+import hu.blackbelt.osgi.filestore.servlet.exceptions.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.annotations.*;
@@ -25,21 +22,12 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.OffsetDateTime;
+import java.util.*;
 
 import static hu.blackbelt.osgi.filestore.servlet.Constants.*;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getContentLength;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getMyLastReceivedFileItems;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getMySessionFileItems;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getSessionFilesKey;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getSessionLastFilesKey;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getUploadedFile;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.renderJsonResponse;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.renderMessage;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.statusToString;
+import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.*;
+import static hu.blackbelt.osgi.filestore.servlet.utils.HttpUtils.processCORS;
 
 /**
  * Upload servlet.
@@ -71,10 +59,10 @@ public class UploadServlet extends HttpServlet implements Servlet {
 
         @AttributeDefinition(name = "Servlet path")
         String servletPath();
+
+        @AttributeDefinition(required = false, name = "Token required", description = "Enforce token check", type = AttributeType.BOOLEAN)
+        boolean tokenRequired() default false;
     }
-
-    public static final ThreadLocal<HttpServletRequest> PER_THREAD_REQUEST = new ThreadLocal<>();
-
 
     protected long maxSize;
     protected long maxFileSize;
@@ -82,17 +70,25 @@ public class UploadServlet extends HttpServlet implements Servlet {
     protected int uploadDelay;
     private String corsDomainsRegex;
     private String servletPath;
+    private boolean tokenRequired;
 
     @Reference
     private HttpService httpService;
 
-    @Reference
-    private FileStoreService fileStoreService;
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
+    FileStoreService fileStoreService;
 
-    public UploadServlet() { }
+    @Reference(policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.OPTIONAL)
+    TokenValidator tokenValidator;
+
+    @Reference(policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.OPTIONAL)
+    TokenIssuer tokenIssuer;
+
+    public UploadServlet() {
+    }
 
     @Activate
-    @SneakyThrows({ ServletException.class, NamespaceException.class })
+    @SneakyThrows({ServletException.class, NamespaceException.class})
     protected void activate(Config config) {
         maxSize = config.maxSize();
         maxFileSize = config.maxFileSize();
@@ -100,6 +96,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
         uploadDelay = config.slowUploads();
         corsDomainsRegex = config.corsDomainRegex();
         servletPath = config.servletPath();
+        tokenRequired = config.tokenRequired();
 
         log.info(String.format(MSG_INIT_MAX_SIZE_D_UPLOAD_DELAY_D_CORS_REGEX_S, maxSize, uploadDelay, corsDomainsRegex));
         httpService.registerServlet(servletPath, this, null, null);
@@ -112,18 +109,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (checkCORS(request, response) && METHOD_OPTIONS.equals(request.getMethod())) {
-            String method = request.getHeader(HEADER_ACCESS_CONTROL_REQUEST_METHOD);
-            if (method != null) {
-                response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_METHODS, method);
-                response.setHeader(HEADER_ALLOW, ALLOW_VALUE);
-            }
-            String headers = request.getHeader(HEADER_ACCESS_CONTROL_REQUEST_HEADERS);
-            if (headers != null) {
-                response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, headers);
-            }
-            response.setContentType(MIMETYPE_TEXT_PLAIN);
-        }
+        processCORS(request, response, corsDomainsRegex);
         super.service(request, response);
     }
 
@@ -144,10 +130,11 @@ public class UploadServlet extends HttpServlet implements Servlet {
      * Override this method if you want to check the request before it is passed
      * to commons-fileupload parser.
      *
-     * @param request
+     * @param request HTTP request
+     * @param maxSize max size
      * @throws RuntimeException
      */
-    public void checkRequest(HttpServletRequest request) {
+    public void checkRequest(HttpServletRequest request, long maxSize) {
         log.debug(String.format(MSG_S_PROCESING_A_REQUEST_WITH_SIZE_D_BYTES, request.getSession().getId(), getContentLength(request)));
         if (getContentLength(request) > maxSize) {
             throw new UploadSizeLimitException(maxSize, getContentLength(request));
@@ -181,6 +168,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
      * content of the uploaded files.
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        response.setContentType(MIMETYPE_TEXT_PLAIN);
         PER_THREAD_REQUEST.set(request);
         try {
             AbstractUploadListener listener = getCurrentListener(request);
@@ -218,16 +206,28 @@ public class UploadServlet extends HttpServlet implements Servlet {
      * The post method is used to receive the file and save it in the user
      * session. It returns a very XML page that the client receives in an
      * iframe.
-     *
+     * <p>
      * The content of this xml document has a tag error in the case of error in
      * the upload process or the string OK in the case of success.
-     *
      */
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        response.setContentType(MIMETYPE_TEXT_PLAIN);
         PER_THREAD_REQUEST.set(request);
         String error;
         try {
-            error = parsePostRequest(request, response);
+            if (tokenRequired && (tokenValidator == null || tokenIssuer == null)) {
+                throw new IllegalStateException(UploadUtils.getMessage(KEY_NOT_READY));
+            }
+            final Token<UploadClaim> uploadToken;
+            if (tokenValidator != null) {
+                uploadToken = tokenValidator.parseUploadToken(request.getHeader(HEADER_TOKEN));
+                if (uploadToken == null) {
+                    throw new TokenRequiredException(UploadUtils.getMessage(KEY_MISSING_TOKEN, HEADER_TOKEN));
+                }
+            } else {
+                uploadToken = null;
+            }
+            error = parsePostRequest(request, response, uploadToken != null ? (Long) UploadClaim.MAX_FILE_SIZE.convert(uploadToken.get(UploadClaim.MAX_FILE_SIZE)) : null);
             String postResponse = "";
             Map<String, String> stat = new HashMap<>();
             if (error != null && error.length() > 0) {
@@ -235,46 +235,58 @@ public class UploadServlet extends HttpServlet implements Servlet {
             } else {
                 List<String> allFiles = new ArrayList<>();
                 for (org.apache.commons.fileupload.FileItem f : getMyLastReceivedFileItems(request)) {
+                    final Collection<String> expectedMimeTypeList = uploadToken != null && uploadToken.get(UploadClaim.FILE_MIME_TYPE_LIST) != null ? Arrays.asList(((String) uploadToken.get(UploadClaim.FILE_MIME_TYPE_LIST)).split("\\s*,\\s*")) : Collections.emptyList();
+                    if (!expectedMimeTypeList.isEmpty()) {
+                        final String uploadedMimeType = f.getContentType();
+                        if (f.getContentType() == null || expectedMimeTypeList.stream().noneMatch(m -> m.equals(uploadedMimeType) || m.equals("*/*") || m.endsWith("/*") && uploadedMimeType.startsWith(m.substring(0, m.length() - 1)))) {
+                            error = UploadUtils.getMessage(KEY_INVALID_MIME_TYPE, uploadedMimeType, expectedMimeTypeList);
+                            allFiles.add(String.format("{\"field\":\"%s\",\"name\":\"%s\",\"ctype\":\"%s\",\"size\":%d,\"error\":\"%s\"}",
+                                    f.getFieldName(), f.getName(), f.getContentType(), f.getSize(), error));
+                            continue;
+                        }
+                    }
                     try (InputStream data = f.getInputStream()) {
                         String id = fileStoreService.put(data, f.getName(), f.getContentType());
                         URL url = fileStoreService.getAccessUrl(id);
-                        allFiles.add(String.format("{\"field\":\"%s\",\"id\":\"%s\",\"name\":\"%s\",\"url\":\"%s\",\"ctype\":\"%s\",\"size\":%d}",
-                                f.getFieldName(), id, f.getName(), url.toString(), f.getContentType(), f.getSize()));
+                        if (tokenIssuer != null) {
+                            String tokenString = tokenIssuer.createDownloadToken(Token.<DownloadClaim>builder()
+                                    .jwtClaim(DownloadClaim.FILE_ID, id)
+                                    .jwtClaim(DownloadClaim.FILE_NAME, f.getName())
+                                    .jwtClaim(DownloadClaim.FILE_SIZE, f.getSize())
+                                    .jwtClaim(DownloadClaim.FILE_MIME_TYPE, f.getContentType())
+                                    .jwtClaim(DownloadClaim.CONTEXT, uploadToken != null ? uploadToken.get(UploadClaim.CONTEXT) : null)
+                                    .build());
+                            allFiles.add(String.format("{\"field\":\"%s\",\"id\":\"%s\",\"name\":\"%s\",\"url\":\"%s\",\"ctype\":\"%s\",\"size\":%d,\"token\":\"%s\"}",
+                                    f.getFieldName(), id, f.getName(), url.toString(), f.getContentType(), f.getSize(), tokenString));
+                        } else {
+                            allFiles.add(String.format("{\"field\":\"%s\",\"id\":\"%s\",\"name\":\"%s\",\"url\":\"%s\",\"ctype\":\"%s\",\"size\":%d}",
+                                    f.getFieldName(), id, f.getName(), url.toString(), f.getContentType(), f.getSize()));
+                        }
                     }
                 }
-                postResponse = "{\"files\":[" + join(",", allFiles) + "],\"finished\":\"ok\"}";
+                postResponse = "{\"files\":[" + String.join(",", allFiles) + "],\"finished\":\"ok\"}";
             }
-            finish(request, postResponse);
+            finish(request, postResponse, request.getParameter(PARAM_KEEP_SESSION) != null ? Boolean.parseBoolean(request.getParameter(PARAM_KEEP_SESSION)) : false);
             renderMessage(response, postResponse, MIMETYPE_APPLICATION_JSON);
         } catch (UploadCanceledException e) {
+            response.setStatus(HttpServletResponse.SC_GONE);
             renderJsonResponse(request, response, String.format(XML_CANCELED_S_CANCELED, TRUE));
         } catch (UploadTimeoutException e) {
+            response.setStatus(HttpServletResponse.SC_REQUEST_TIMEOUT);
             renderJsonResponse(request, response, String.format(XML_ERROR_S_ERROR, MSG_TIMEOUT_RECEIVING_FILE));
         } catch (UploadSizeLimitException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            renderJsonResponse(request, response, String.format(XML_ERROR_S_ERROR, e.getMessage()));
+        } catch (TokenRequiredException e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             renderJsonResponse(request, response, String.format(XML_ERROR_S_ERROR, e.getMessage()));
         } catch (Exception e) {
             log.error(String.format(MSG_S_EXCEPTION_S, request.getSession().getId(), e.getMessage()), e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             renderJsonResponse(request, response, String.format(XML_ERROR_S_ERROR, e.getMessage()));
         } finally {
             PER_THREAD_REQUEST.set(null);
         }
-    }
-
-    protected boolean checkCORS(HttpServletRequest request, HttpServletResponse response) {
-        String origin = request.getHeader("Origin");
-        if (origin != null && origin.matches(corsDomainsRegex)) {
-            // Maybe the user has used this domain before and has a session-cookie, we delete it
-            //   Cookie c  = new Cookie("JSESSIONID", "");
-            //   c.setMaxAge(0);
-            //   response.addCookie(c);
-            // All doXX methods should set these header
-            response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-            response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, TRUE);
-            return true;
-        } else if (origin != null) {
-            log.warn(String.format(MSG_CHECK_CORS_ERROR_ORIGIN_S_DOES_NOT_MATCH_S, origin, corsDomainsRegex));
-        }
-        return false;
     }
 
     protected Map<String, String> getFileItemsSummary(HttpServletRequest request, Map<String, String> pStat) {
@@ -332,10 +344,14 @@ public class UploadServlet extends HttpServlet implements Servlet {
      * @param request
      * @param postResponse
      */
-    protected void finish(HttpServletRequest request, String postResponse) {
+    protected void finish(HttpServletRequest request, String postResponse, boolean keepSession) {
         AbstractUploadListener listener = getCurrentListener(request);
         if (listener != null) {
             listener.setFinished(postResponse);
+        }
+        if (!keepSession) {
+            removeSessionFileItems(request);
+            removeCurrentListener(request);
         }
     }
 
@@ -367,6 +383,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
      * @return a map of tag/values to be rendered
      */
     protected Map<String, String> getUploadStatus(HttpServletRequest request, String fieldname, Map<String, String> pRet) {
+        log.info("GET UPLOAD STATUS...");
         PER_THREAD_REQUEST.set(request);
         HttpSession session = request.getSession();
 
@@ -379,6 +396,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
         long totalBytes = 0;
         long percent = 0;
         AbstractUploadListener listener = getCurrentListener(request);
+        log.info("  - listener: {}", listener);
         if (listener != null) {
             if (listener.isFinished()) {
                 // TODO: Nothing
@@ -404,6 +422,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
                 ret.put(TAG_TOTAL_BYTES, EMPTY_STRING + totalBytes);
             }
         } else if (getMySessionFileItems(request) != null) {
+            log.info("  - file items: {}", getMySessionFileItems(request));
             if (fieldname == null) {
                 ret.put(TAG_FINISHED, RESP_OK);
                 log.debug(String.format(MSG_S_GET_UPLOAD_STATUS_S_FINISHED_WITH_FILES_S, request.getSession().getId(),
@@ -412,7 +431,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
                 List<org.apache.commons.fileupload.FileItem> sessionFiles = getMySessionFileItems(request);
                 for (org.apache.commons.fileupload.FileItem file : sessionFiles) {
                     if (!file.isFormField() && file.getFieldName().equals(fieldname)) {
-                        ret.put(TAG_FINISHED, "ok");
+                        ret.put(TAG_FINISHED, RESP_OK);
                         ret.put(Constants.PARAM_FILENAME, fieldname);
                         log.debug(String.format(MSG_S_GET_UPLOAD_STATUS_S_FINISHED_WITH_FILES_S, request.getSession().getId(),
                                 fieldname, session.getAttribute(getSessionFilesKey(request))));
@@ -420,6 +439,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
                 }
             }
         } else {
+            log.info("  - default");
             log.debug(String.format(MSG_S_GET_UPLOAD_STATUS_NO_LISTENER_IN_SESSION, request.getSession().getId()));
             ret.put("wait", "listener is null");
         }
@@ -434,11 +454,10 @@ public class UploadServlet extends HttpServlet implements Servlet {
      * This method parses the submit action, puts in session a listener where the
      * progress status is updated, and eventually stores the received data in
      * the user session.
-     *
+     * <p>
      * returns null in the case of success or a string with the error
-     *
      */
-    protected String parsePostRequest(HttpServletRequest request, HttpServletResponse response) {
+    protected String parsePostRequest(HttpServletRequest request, HttpServletResponse response, Long maxFileSize) {
 
         /* Do not allow override upload parameters
         try {
@@ -473,13 +492,13 @@ public class UploadServlet extends HttpServlet implements Servlet {
         try {
 
             // Call to a method which the user can override
-            checkRequest(request);
+            checkRequest(request, maxFileSize != null && maxFileSize > maxSize ? maxFileSize : maxSize);
 
             // Create the factory used for uploading files,
             org.apache.commons.fileupload.FileItemFactory factory = getFileItemFactory(getContentLength(request));
             org.apache.commons.fileupload.servlet.ServletFileUpload uploader = new org.apache.commons.fileupload.servlet.ServletFileUpload(factory);
-            uploader.setSizeMax(maxSize);
-            uploader.setFileSizeMax(maxFileSize);
+            uploader.setSizeMax(maxFileSize != null && maxFileSize > maxSize ? maxFileSize : maxSize);
+            uploader.setFileSizeMax(maxFileSize != null ? maxFileSize : this.maxFileSize);
             uploader.setProgressListener(listener);
 
             // Receive the files
@@ -538,16 +557,5 @@ public class UploadServlet extends HttpServlet implements Servlet {
         if (listener != null) {
             listener.remove();
         }
-    }
-
-    static String join(String separator, List<String> items) {
-        StringBuilder sb = new StringBuilder();
-        for (String part : items) {
-            if (sb.length() != 0) {
-                sb.append(separator);
-            }
-            sb.append(part);
-        }
-        return sb.toString();
     }
 }

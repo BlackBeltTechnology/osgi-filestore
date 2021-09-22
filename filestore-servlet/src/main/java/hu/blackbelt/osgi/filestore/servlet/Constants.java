@@ -33,6 +33,7 @@ public final class Constants {
     public static final String PARAM_REMOVE = "remove";
     public static final String PARAM_SESSION = "new_session";
     public static final String PARAM_SHOW = "show";
+    public static final String PARAM_KEEP_SESSION = "keep_session";
 
     public static final String MULTI_SUFFIX = "[]";
 
@@ -58,6 +59,8 @@ public final class Constants {
     public static final String METHOD_OPTIONS = "OPTIONS";
     public static final String ALLOW_VALUE = METHOD_GET + ":" + " HEAD, POST, PUT, DELETE, TRACE, OPTIONS";
 
+    public static final String HEADER_TOKEN = "X-Token";
+    public static final String PARAM_FILE_ID = "id";
 
     public static final String MIMETYPE_TEXT_PLAIN = "text/plain";
     public static final String MIMETYPE_TEXT_HTML = "text/html";
@@ -109,6 +112,12 @@ public final class Constants {
     public static final String KEY_SERVER_ERROR = "server_error";
     public static final String KEY_BUSY = "busy";
     public static final String KEY_RESTRICTED = "restricted";
+    public static final String KEY_MISSING_TOKEN = "missing_token";
+    public static final String KEY_MISSING_PARAMETER = "missing_parameter";
+    public static final String KEY_INVALID_MIME_TYPE = "invalid_mime_type";
+    public static final String KEY_INVALID_TOKEN = "invalid_token";
+
+    public static final String KEY_NOT_READY = "not_ready";
 
     private Constants() { }
 }
