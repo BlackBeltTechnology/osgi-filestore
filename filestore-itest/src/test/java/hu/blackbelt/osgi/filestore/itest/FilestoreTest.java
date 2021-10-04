@@ -8,6 +8,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static hu.blackbelt.osgi.filestore.itest.utils.TestUtil.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,6 +54,10 @@ public class FilestoreTest {
 
     public static final String FEATURE_FILESTORE_FULL = "filestore-full";
     public static final String FEATURE_HTTP_CLIENT_4 = "apache-httpclient4";
+
+    private static final String TEST_ORIGIN = "http://www.example.com";
+    private static final String TEST_METHOD = "GET";
+    private static final Collection<String> TEST_HEADERS = Arrays.asList("Origin", "Accept", "Content-Type");
 
     @Inject
     TokenIssuer tokenIssuer;
@@ -87,8 +93,10 @@ public class FilestoreTest {
                         .put("protocol", "judostore").asOption(),
 
                 newConfiguration("hu.blackbelt.osgi.filestore.servlet.UploadServlet")
+                        .put("cors.allowOrigin", TEST_ORIGIN)
                         .put("servletPath", "/upload").asOption(),
                 newConfiguration("hu.blackbelt.osgi.filestore.servlet.DownloadServlet")
+                        .put("cors.allowOrigin", TEST_ORIGIN)
                         .put("servletPath", "/download").asOption(),
 
                 newConfiguration("hu.blackbelt.osgi.filestore.security.DefaultTokenIssuer")
@@ -132,17 +140,33 @@ public class FilestoreTest {
         log.info("Decoded upload token for PDF files: {}", decodedUploadToken);
         assertThat(decodedUploadToken, equalTo(pdfUploadToken));
 
-        final HttpPost uploadRequestWithoutToken = getUploadRequest(null, false);
+        final HttpResponse uploadPreflight1 = client.execute(getPrefligthRequest(TEST_ORIGIN, TEST_METHOD, TEST_HEADERS, "/upload"));
+        assertThat(uploadPreflight1.getStatusLine().getStatusCode(), equalTo(200));
+        assertThat(uploadPreflight1.getFirstHeader("Access-Control-Allow-Origin").getValue(), equalTo(TEST_ORIGIN));
+        assertThat(uploadPreflight1.getFirstHeader("Access-Control-Allow-Credentials").getValue(), equalTo("true"));
+        assertThat(uploadPreflight1.getFirstHeader("Access-Control-Allow-Methods").getValue(), equalTo(TEST_METHOD));
+        assertThat(uploadPreflight1.getFirstHeader("Access-Control-Allow-Headers").getValue(), equalTo(TEST_HEADERS.stream().collect(Collectors.joining(","))));
+        assertThat(uploadPreflight1.getFirstHeader("Access-Control-Max-Age").getValue(), equalTo("-1"));
+
+        assertThat(client.execute(getPrefligthRequest("http://www.invalid.com", TEST_METHOD, TEST_HEADERS, "/upload")).getStatusLine().getStatusCode(), equalTo(400));
+        assertThat(client.execute(getPrefligthRequest(TEST_ORIGIN, "POST", TEST_HEADERS, "/upload")).getStatusLine().getStatusCode(), equalTo(200));
+        assertThat(client.execute(getPrefligthRequest(TEST_ORIGIN, "DELETE", TEST_HEADERS, "/upload")).getStatusLine().getStatusCode(), equalTo(400));
+        assertThat(client.execute(getPrefligthRequest(TEST_ORIGIN, TEST_METHOD, Collections.singleton("X-Invalid"), "/upload")).getStatusLine().getStatusCode(), equalTo(400));
+
+        final HttpPost uploadRequestWithoutToken = getUploadRequest(null, TEST_ORIGIN, false);
         assertThat(execute(uploadRequestWithoutToken), equalTo(HttpStatus.SC_FORBIDDEN));
 
-        final HttpPost uploadRequestWithInvalidToken = getUploadRequest(pdfUploadTokenString, false);
+        final HttpPost uploadRequestWithInvalidToken = getUploadRequest(pdfUploadTokenString, TEST_ORIGIN, false);
         final HttpResponse uploadResponseWithInvalidToken = client.execute(uploadRequestWithInvalidToken);
         final String uploadResponseMessageWithInvalidToken = IOUtils.toString(uploadResponseWithInvalidToken.getEntity().getContent());
         log.info("Response: {}\n{}", uploadResponseWithInvalidToken, uploadResponseMessageWithInvalidToken);
         assertThat(uploadResponseWithInvalidToken.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_OK));
         assertThat(uploadResponseMessageWithInvalidToken, stringContainsInOrder(Arrays.asList("Invalid MIME type: text/plain, expected: [application/pdf]")));
 
-        final HttpPost uploadRequest = getUploadRequest(textUploadTokenString, true);
+        final HttpPost uploadRequestWithInvalidOrigin = getUploadRequest(textUploadTokenString, "http://www.invalid.com", true);
+        assertThat(execute(uploadRequestWithInvalidOrigin), equalTo(HttpStatus.SC_BAD_REQUEST));
+
+        final HttpPost uploadRequest = getUploadRequest(textUploadTokenString, null, true);
         final HttpResponse uploadResponse = client.execute(uploadRequest);
         final String uploadResponseMessage = IOUtils.toString(uploadResponse.getEntity().getContent());
         final Map<String, Object> uploadResponseJson = JsonUtil.parseJson(uploadResponseMessage);
@@ -159,13 +183,28 @@ public class FilestoreTest {
         assertThat(decodedDownloadToken.get(DownloadClaim.CONTEXT), notNullValue());
         assertThat(JsonUtil.parseJson((String) decodedDownloadToken.get(DownloadClaim.CONTEXT)), equalTo(context));
 
-        final HttpGet downloadRequestWithoutToken = getDownloadRequest(null, null);
+        final HttpResponse downloadPreflight1 = client.execute(getPrefligthRequest(TEST_ORIGIN, TEST_METHOD, TEST_HEADERS, "/download"));
+        assertThat(downloadPreflight1.getStatusLine().getStatusCode(), equalTo(200));
+        assertThat(downloadPreflight1.getFirstHeader("Access-Control-Allow-Origin").getValue(), equalTo(TEST_ORIGIN));
+        assertThat(downloadPreflight1.getFirstHeader("Access-Control-Allow-Credentials").getValue(), equalTo("true"));
+        assertThat(downloadPreflight1.getFirstHeader("Access-Control-Allow-Methods").getValue(), equalTo(TEST_METHOD));
+        assertThat(downloadPreflight1.getFirstHeader("Access-Control-Allow-Headers").getValue(), equalTo(TEST_HEADERS.stream().collect(Collectors.joining(","))));
+        assertThat(downloadPreflight1.getFirstHeader("Access-Control-Max-Age").getValue(), equalTo("-1"));
+
+        assertThat(client.execute(getPrefligthRequest("http://www.invalid.com", TEST_METHOD, TEST_HEADERS, "/download")).getStatusLine().getStatusCode(), equalTo(400));
+        assertThat(client.execute(getPrefligthRequest(TEST_ORIGIN, "POST", TEST_HEADERS, "/download")).getStatusLine().getStatusCode(), equalTo(400));
+        assertThat(client.execute(getPrefligthRequest(TEST_ORIGIN, TEST_METHOD, Collections.singleton("X-Invalid"), "/download")).getStatusLine().getStatusCode(), equalTo(400));
+
+        final HttpGet downloadRequestWithoutToken = getDownloadRequest(null, TEST_ORIGIN, null);
         assertThat(execute(downloadRequestWithoutToken), equalTo(HttpStatus.SC_FORBIDDEN));
 
-        final HttpGet downloadRequestWithoutId = getDownloadRequest(downloadTokenString, UUID.randomUUID().toString());
+        final HttpGet downloadRequestWithoutId = getDownloadRequest(downloadTokenString, TEST_ORIGIN, UUID.randomUUID().toString());
         assertThat(execute(downloadRequestWithoutId), equalTo(HttpStatus.SC_FORBIDDEN));
 
-        final HttpGet downloadRequest = getDownloadRequest(downloadTokenString, id);
+        final HttpGet downloadRequestWithInvalidOrigin = getDownloadRequest(downloadTokenString, "http://www.invalid.com", id);
+        assertThat(execute(downloadRequestWithInvalidOrigin), equalTo(HttpStatus.SC_BAD_REQUEST));
+
+        final HttpGet downloadRequest = getDownloadRequest(downloadTokenString, TEST_ORIGIN, id);
         final HttpResponse downloadResponse = client.execute(downloadRequest);
         assertThat(Optional.ofNullable(downloadResponse.getFirstHeader("Content-Disposition")).map(h -> h.getValue()).orElse(null), equalTo("attachment; filename=\"" + decodedDownloadToken.get(DownloadClaim.FILE_NAME) + "\""));
         assertThat(downloadResponse.getEntity().getContentLength(), equalTo(decodedDownloadToken.get(DownloadClaim.FILE_SIZE)));
@@ -182,7 +221,7 @@ public class FilestoreTest {
                 .build();
         final String downloadToken2String = tokenIssuer.createDownloadToken(downloadToken2);
 
-        final HttpGet downloadRequest2 = getDownloadRequest(downloadToken2String, null);
+        final HttpGet downloadRequest2 = getDownloadRequest(downloadToken2String, null, null);
         final HttpResponse downloadResponse2 = client.execute(downloadRequest2);
         assertThat(Optional.ofNullable(downloadResponse2.getFirstHeader("Content-Disposition")).map(h -> h.getValue()).orElse(null), equalTo("attachment; filename=\"" + decodedDownloadToken.get(DownloadClaim.FILE_NAME) + "\""));
         assertThat(downloadResponse2.getEntity().getContentLength(), equalTo(decodedDownloadToken.get(DownloadClaim.FILE_SIZE)));
@@ -201,8 +240,21 @@ public class FilestoreTest {
         return new ByteArrayInputStream(getSampleTextBytes());
     }
 
-    private HttpPost getUploadRequest(final String token, final boolean setContentLength) {
+    private HttpOptions getPrefligthRequest(final String origin, final String requestMethod, final Collection<String> requestHeaders, final String path) {
+        final HttpOptions request = new HttpOptions("http://localhost:8181" + path);
+        request.setHeader("Origin", origin);
+        request.setHeader("Access-Control-Request-Method", requestMethod);
+        if (requestHeaders != null && !requestHeaders.isEmpty()) {
+            request.setHeader("Access-Control-Request-Headers", requestHeaders.stream().collect(Collectors.joining(",")));
+        }
+        return request;
+    }
+
+    private HttpPost getUploadRequest(final String token, final String origin, final boolean setContentLength) {
         final HttpPost uploadRequest = new HttpPost("http://localhost:8181/upload");
+        if (origin != null) {
+            uploadRequest.setHeader("Origin", origin);
+        }
         final MultipartEntityBuilder uploadRequestEntity = MultipartEntityBuilder.create();
         uploadRequestEntity.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         if (setContentLength) {
@@ -224,10 +276,13 @@ public class FilestoreTest {
         return uploadRequest;
     }
 
-    private HttpGet getDownloadRequest(final String token, final String id) {
+    private HttpGet getDownloadRequest(final String token, final String origin, final String id) {
         final HttpGet downloadRequest = new HttpGet("http://localhost:8181/download" + (id != null ? "?id=" + id : ""));
         if (token != null) {
             downloadRequest.setHeader("X-Token", token);
+        }
+        if (origin != null) {
+            downloadRequest.setHeader("Origin", origin);
         }
 
         return downloadRequest;
