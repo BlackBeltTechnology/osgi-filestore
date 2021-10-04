@@ -7,6 +7,7 @@ import hu.blackbelt.osgi.filestore.security.api.TokenValidator;
 import hu.blackbelt.osgi.filestore.security.api.exceptions.InvalidTokenException;
 import hu.blackbelt.osgi.filestore.servlet.exceptions.MissingParameterException;
 import hu.blackbelt.osgi.filestore.servlet.exceptions.TokenRequiredException;
+import hu.blackbelt.osgi.filestore.servlet.utils.CorsProcessor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.annotations.*;
@@ -25,12 +26,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static hu.blackbelt.osgi.filestore.servlet.Constants.*;
 import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.*;
-import static hu.blackbelt.osgi.filestore.servlet.utils.HttpUtils.processCORS;
 
 /**
  * Download servlet.
@@ -43,17 +44,32 @@ public class DownloadServlet extends HttpServlet {
     @ObjectClassDefinition()
     public @interface Config {
 
-        @AttributeDefinition(required = false, name = "CORS domain regular expression")
-        String corsDomainRegex() default "^$";
-
         @AttributeDefinition(name = "Servlet path")
         String servletPath();
 
         @AttributeDefinition(required = false, name = "Token required", description = "Enforce token check", type = AttributeType.BOOLEAN)
         boolean tokenRequired() default false;
+
+        @AttributeDefinition(name = "CORS allow origin", description = "Comma-separated list of Access-Control-Allow-Origin")
+        String cors_allowOrigin() default ALL;
+
+        @AttributeDefinition(name = "CORS allow headers", description = "Access-Control-Allow-Credentials", type = AttributeType.BOOLEAN)
+        boolean cors_allowCredentials() default true;
+
+        @AttributeDefinition(name = "CORS allow headers", description = "Comma-separated list of Access-Control-Allow-Headers")
+        String cors_allowHeaders() default HEADER_CONTENT_TYPE + "," + HEADER_ORIGIN + "," + HEADER_ACCEPT + "," + HEADER_AUTHORIZATION;
+
+        @AttributeDefinition(name = "CORS expose headers", description = "Comma-separated list of Access-Control-Expose-Headers")
+        String cors_exposeHeaders() default HEADER_CONTENT_TYPE;
+
+        @AttributeDefinition(name = "CORS max age", description = "Access-Control-Max-Age")
+        int cors_maxAge() default -1;
+
+        @AttributeDefinition(name = "CORS preflight error code", description = "HTTP status code returned by failed prefligth requests", type = AttributeType.INTEGER)
+        int cors_prefligthErrorStatus() default CORS_PREFLIGHT_ERROR_CODE;
     }
 
-    private String corsDomainsRegex;
+    private CorsProcessor corsProcessor = CorsProcessor.builder().build();
     private String servletPath;
     private boolean tokenRequired;
 
@@ -69,7 +85,22 @@ public class DownloadServlet extends HttpServlet {
     @Activate
     @SneakyThrows({ ServletException.class, NamespaceException.class })
     protected void activate(DownloadServlet.Config config) {
-        corsDomainsRegex = config.corsDomainRegex();
+        corsProcessor = CorsProcessor.builder()
+                .allowOrigins(config.cors_allowOrigin() != null ? Arrays.asList(config.cors_allowOrigin().split("\\s*,\\s*")) : Collections.emptyList())
+                .allowCredentials(config.cors_allowCredentials())
+                .allowHeaders(Stream
+                        .concat(
+                                (config.cors_allowHeaders() != null ? Arrays.asList(config.cors_allowHeaders().split("\\s*,\\s*")) : Collections.<String>emptyList()).stream(),
+                                Arrays.asList(HEADER_TOKEN).stream())
+                        .collect(Collectors.toSet()))
+                .exposeHeaders(Stream
+                        .concat(
+                                (config.cors_exposeHeaders() != null ? Arrays.asList(config.cors_exposeHeaders().split("\\s*,\\s*")) : Collections.<String>emptyList()).stream(),
+                                Arrays.asList(HEADER_CONTENT_DISPOSITION).stream())
+                        .collect(Collectors.toSet()))
+                .maxAge(config.cors_maxAge())
+                .preflightErrorStatus(config.cors_prefligthErrorStatus())
+                .build();
         servletPath = config.servletPath();
         tokenRequired = config.tokenRequired();
 
@@ -83,8 +114,9 @@ public class DownloadServlet extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        processCORS(request, response, corsDomainsRegex);
-        super.service(request, response);
+        if (corsProcessor.process(request, response, Arrays.asList(METHOD_GET, METHOD_OPTIONS))) {
+            super.service(request, response);
+        }
     }
 
     @Override

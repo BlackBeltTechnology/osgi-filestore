@@ -40,9 +40,9 @@
         <findbugs.skip>false</findbugs.skip>
         <findbugs.annotations.version>3.0.1</findbugs.annotations.version>
         <qa.failOnError>true</qa.failOnError>
-        
-        <lombok.version>1.18.12</lombok.version>
-        <slf4j.version>1.7.25</slf4j.version>
+
+        <lombok.version>1.18.20</lombok.version>
+        <slf4j.version>1.7.32</slf4j.version>
         <local-deploy.skip>false</local-deploy.skip>
         
         <osgi-utils-version>1.0.10</osgi-utils-version>
