@@ -8,7 +8,7 @@
   <packaging>pom</packaging>
   <name>OSGi filestore parent</name>
   <description>Parent project of OSGi filestore.</description>
-  <url>http://github.com/${project-repositoryId}</url>
+  <url>https://github.com/${project-repositoryId}</url>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -19,9 +19,17 @@
   <developers>
     <developer>
       <id>robson</id>
-      <name>Csákány Róbert</name>
+      <name>Róbert Csákány</name>
       <email>robert.csakany@blackbelt.hu</email>
       <url>https://github.com/robertcsakany</url>
+      <organization>BlackBelt Technology</organization>
+      <organizationUrl>http://www.blackbelt.hu</organizationUrl>
+    </developer>
+    <developer>
+      <id>borcsokj</id>
+      <name>Börcsök József</name>
+      <email>jozsef.borcsok@blackbelt.hu</email>
+      <url>https://github.com/borcsokj</url>
       <organization>BlackBelt Technology</organization>
       <organizationUrl>http://www.blackbelt.hu</organizationUrl>
     </developer>
@@ -37,141 +45,179 @@
   </issueManagement>
   <properties>
     <karaf-version>4.3.3</karaf-version>
-    <log4j.configuration>log4j.properties</log4j.configuration>
-    <google-karaf-features-version>1.0.7</google-karaf-features-version>
-    <project-shortname>osgi-email</project-shortname>
-    <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
-    <project-repositoryId>BlackBeltTechnology/osgi-email</project-repositoryId>
+    <project-shortname>osgi-liquibase</project-shortname>
+    <osgi-ds.version>1.3.0</osgi-ds.version>
+    <pmd.version>6.3.0</pmd.version>
+    <reflections.version>0.9.10</reflections.version>
+    <sonar-maven-plugin-version>3.7.0.1746</sonar-maven-plugin-version>
+    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+    <slf4j.version>1.7.32</slf4j.version>
+    <servlet-api.version>2.5</servlet-api.version>
+    <project-repositoryId>BlackBeltTechnology/osgi-liquibase</project-repositoryId>
+    <javassist.version>3.19.0-GA</javassist.version>
+    <jose4j-version>0.7.2</jose4j-version>
+    <findbugs.plugin.version>3.0.5</findbugs.plugin.version>
+    <functionaljava.version>4.3</functionaljava.version>
+    <revision>1.2.1-SNAPSHOT</revision>
+    <qa.failOnError>true</qa.failOnError>
+    <checkstyle.skip>false</checkstyle.skip>
+    <felix-scr-annotations.version>1.12.0</felix-scr-annotations.version>
+    <deployOnly>false</deployOnly>
+    <osgi-liquibase-version>1.2.0</osgi-liquibase-version>
+    <sonar.java.source>${java.version}</sonar.java.source>
+    <findbugs.skip>false</findbugs.skip>
+    <guava.version>27.1-jre</guava.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <timestamp>${maven.build.timestamp}</timestamp>
-    <email.version>1.16.18</email.version>
-    <maven>3.8.3</maven>
-    <maven.compiler.source>11</maven.compiler.source>
-    <spring.version>5.2.0.RELEASE</spring.version>
-    <pax-exam-version>4.13.4</pax-exam-version>
-    <revision>1.0.0-SNAPSHOT</revision>
-    <maven.compiler.target>11</maven.compiler.target>
-    <subethamail-karaf-features-version>1.0.0</subethamail-karaf-features-version>
-    <src.dir>src/main</src.dir>
+    <osgi-utils-version>1.0.10</osgi-utils-version>
+    <local-deploy.skip>false</local-deploy.skip>
+    <sonar.language>java</sonar.language>
+    <java.version>11</java.version>
+    <pmd.plugin.version>3.9.0</pmd.plugin.version>
+    <findbugs.annotations.version>3.0.1</findbugs.annotations.version>
+    <pmd.skip>false</pmd.skip>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <lombok.version>1.18.22</lombok.version>
+    <checkstyle.version>8.29</checkstyle.version>
+    <findbugs.version>3.0.1</findbugs.version>
+    <checkstyle.plugin.version>3.0.0</checkstyle.plugin.version>
+    <maven.deploy.skip>false</maven.deploy.skip>
+    <osgi.version>6.0.0</osgi.version>
   </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>hu.blackbelt</groupId>
-        <artifactId>osgi-email-api</artifactId>
-        <version>${project.version}</version>
+        <groupId>org.osgi</groupId>
+        <artifactId>osgi.core</artifactId>
+        <version>${osgi.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>hu.blackbelt</groupId>
-        <artifactId>osgi-email-impl</artifactId>
-        <version>${project.version}</version>
+        <groupId>org.osgi</groupId>
+        <artifactId>osgi.cmpn</artifactId>
+        <version>${osgi.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.annotation</artifactId>
+        <version>${osgi.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.service.component.annotations</artifactId>
+        <version>${osgi-ds.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.service.metatype.annotations</artifactId>
+        <version>${osgi-ds.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>servlet-api</artifactId>
+        <version>${servlet-api.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>${lombok.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.javassist</groupId>
+        <artifactId>javassist</artifactId>
+        <version>${javassist.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.reflections</groupId>
+        <artifactId>reflections</artifactId>
+        <version>${reflections.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.functionaljava</groupId>
+        <artifactId>functionaljava</artifactId>
+        <version>${functionaljava.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>annotations</artifactId>
+        <version>${findbugs.annotations.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>${slf4j.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.scr.annotations</artifactId>
+        <version>${felix-scr-annotations.version}</version>
+        <scope>test</scope>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>hu.blackbelt.osgi.utils</groupId>
+        <artifactId>osgi-test</artifactId>
+        <version>${osgi-utils-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bitbucket.b_c</groupId>
+        <artifactId>jose4j</artifactId>
+        <version>${jose4j-version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.6.0</version>
-    </dependency>
-    <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.22</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>27.1-jre</version>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>5.6.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <version>5.6.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
-      <version>5.6.2</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.21</version>
-      <scope>test</scope>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.jcabi</groupId>
-      <artifactId>jcabi-log</artifactId>
-      <version>0.18</version>
-      <scope>test</scope>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>6.0.0</version>
-      <scope>provided</scope>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>osgi.cmpn</artifactId>
-      <version>6.0.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.annotation</artifactId>
-      <version>6.0.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest</artifactId>
-      <version>2.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>3.0.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-junit-jupiter</artifactId>
-      <version>3.0.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.commons.classloader</artifactId>
-      <version>1.4.4</version>
-      <scope>provided</scope>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
     </dependency>
   </dependencies>
   <build>
+    <finalName>${project.groupId}.${project.artifactId}-${project.version}</finalName>
     <pluginManagement>
       <plugins>
         <plugin>
           <groupId>org.apache.karaf.tooling</groupId>
           <artifactId>karaf-maven-plugin</artifactId>
           <version>${karaf-version}</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.7.0</version>
-          <configuration>
-            <source>1.8</source>
-            <target>1.8</target>
-          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
@@ -202,47 +248,180 @@
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.0.0-M4</version>
+          <version>3.0.0-M3</version>
           <configuration>
             <argLine>-Dfile.encoding=UTF-8</argLine>
-            <trimStackTrace>false</trimStackTrace>
-            <systemPropertyVariables>
-              <log4j.configuration>${log4j.configuration}</log4j.configuration>
-            </systemPropertyVariables>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>3.0.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
           <version>5.1.2</version>
           <extensions>true</extensions>
+          <executions>
+            <execution>
+              <id>bundle-manifest</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>manifest</goal>
+              </goals>
+            </execution>
+          </executions>
           <configuration>
             <instructions>
-              <Export-Package>hu.blackbelt.epsilon.runtime.*;version=${project.version}</Export-Package>
-              <Import-Package>!lombok,
-                                javax.annotation;version="[1.0,2)",
+              <Bundle-Version>${project.version}</Bundle-Version>
+              <Implementation-Build>${buildNumber}</Implementation-Build>
+              <_dsannotations>*</_dsannotations>
+              <_metatypeannotations>*</_metatypeannotations>
+              <_include>${additional.manifest.file}</_include>
+              <Import-Package>!javax.annotation,
+                                !lombok,
                                 *</Import-Package>
             </instructions>
           </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>jaxb2-maven-plugin</artifactId>
+          <version>2.3.1</version>
+          <executions>
+            <execution>
+              <id>xjc</id>
+              <goals>
+                <goal>xjc</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>healthcheck-maven-plugin</artifactId>
+          <version>${project.version}</version>
+          <executions>
+            <execution>
+              <id>process-healthcheck-annotation</id>
+              <goals>
+                <goal>processAnnotation</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${checkstyle.plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>${checkstyle.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <artifactId>maven-pmd-plugin</artifactId>
+          <version>${pmd.plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>net.sourceforge.pmd</groupId>
+              <artifactId>pmd-core</artifactId>
+              <version>${pmd.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>net.sourceforge.pmd</groupId>
+              <artifactId>pmd-java</artifactId>
+              <version>${pmd.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <version>${findbugs.plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.google.code.findbugs</groupId>
+              <artifactId>findbugs</artifactId>
+              <version>${findbugs.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>2.5.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>${sonar-maven-plugin-version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
       <plugin>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>3.7</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.7.0</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>2.9</version>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.0.0</version>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.4</version>
         <executions>
           <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
+            <phase>validate</phase>
             <goals>
-              <goal>add-source</goal>
+              <goal>create</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <doCheck>false</doCheck>
+          <doUpdate>false</doUpdate>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>regex-property</id>
+            <goals>
+              <goal>regex-property</goal>
             </goals>
             <configuration>
-              <sources>
-                <source>src/main/java</source>
-              </sources>
+              <name>artifact.subPackage</name>
+              <value>${project.artifactId}</value>
+              <regex>-</regex>
+              <replacement>.</replacement>
+              <failIfNoMatch>false</failIfNoMatch>
             </configuration>
           </execution>
         </executions>
@@ -284,10 +463,18 @@
         </property>
       </activation>
       <modules>
-        <module>osgi-email-api</module>
-        <module>osgi-email-impl</module>
-        <module>osgi-email-karaf-features</module>
-        <module>osgi-email-itest</module>
+        <module>filestore-api</module>
+        <module>mime-api</module>
+        <module>mime-impl</module>
+        <module>filestore-urlhandler</module>
+        <module>filestore-filesystem</module>
+        <module>filestore-rdbms</module>
+        <module>filestore-security-api</module>
+        <module>filestore-security</module>
+        <module>filestore-servlet</module>
+        <module>filestore-itest</module>
+        <module>features</module>
+        <module>kar</module>
       </modules>
     </profile>
     <profile>
