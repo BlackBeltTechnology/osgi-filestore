@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<features name="judo-TEST"
+          xmlns="http://karaf.apache.org/xmlns/features/v1.5.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.5.0 http://karaf.apache.org/xmlns/features/v1.5.0">
+
+    <repository>mvn:hu.blackbelt.karaf.features/apache-httpclient-features/${apache-httpclient-karaf-features-version}/xml/features</repository>
+
+
+    <feature name="test"  version="1" description="Base test features" install="true">
+        <feature prerequisite="true">wrap</feature>
+        <feature prerequisite="true">shell</feature>
+        <feature prerequisite="true">scr</feature>
+        <feature>apache-httpclient4</feature>
+    </feature>
+
+</features>

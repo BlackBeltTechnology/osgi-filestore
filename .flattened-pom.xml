@@ -67,6 +67,7 @@
     <sonar.java.source>${java.version}</sonar.java.source>
     <findbugs.skip>false</findbugs.skip>
     <guava.version>27.1-jre</guava.version>
+    <apache-httpclient-karaf-features-version>1.0.0</apache-httpclient-karaf-features-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <osgi-utils-version>1.0.10</osgi-utils-version>
     <local-deploy.skip>false</local-deploy.skip>

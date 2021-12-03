@@ -52,6 +52,8 @@
         <osgi-liquibase-version>1.2.0</osgi-liquibase-version>
         <jose4j-version>0.7.2</jose4j-version>
 
+        <apache-httpclient-karaf-features-version>1.0.0</apache-httpclient-karaf-features-version>
+
         <!-- Code Quality-->
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
