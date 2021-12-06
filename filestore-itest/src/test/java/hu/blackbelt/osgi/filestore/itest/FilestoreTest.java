@@ -23,6 +23,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.ops4j.pax.exam.util.Filter;
@@ -36,11 +37,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static hu.blackbelt.osgi.filestore.itest.utils.TestUtil.*;
+import static hu.blackbelt.osgi.filestore.itest.utils.KarafFeatureProvider.karafConfig;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.text.StringContainsInOrder.stringContainsInOrder;
+import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.OptionUtils.combine;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
@@ -53,7 +55,6 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 public class FilestoreTest {
 
     public static final String FEATURE_FILESTORE_FULL = "filestore-full";
-    public static final String FEATURE_HTTP_CLIENT_4 = "apache-httpclient4";
 
     private static final String TEST_ORIGIN = "http://www.example.com";
     private static final String TEST_METHOD = "GET";
@@ -73,6 +74,10 @@ public class FilestoreTest {
     @Filter("(component.name=hu.blackbelt.osgi.filestore.servlet.DownloadServlet)")
     Servlet downloadServlet;
 
+    public static MavenArtifactUrlReference filestoreArtifact() {
+        return maven().groupId("hu.blackbelt.osgi.filestore").artifactId("features").versionAsInProject().classifier("features").type("xml");
+    }
+
     @Configuration
     @SneakyThrows
     public Option[] config() {
@@ -85,7 +90,6 @@ public class FilestoreTest {
                 systemProperty("pax.exam.service.timeout").value("120000"),
 
                 features(filestoreArtifact(), FEATURE_FILESTORE_FULL),
-                features(httpClientArtifact(), FEATURE_HTTP_CLIENT_4),
 
                 editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", "8181"),
 
