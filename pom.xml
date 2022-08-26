@@ -49,7 +49,7 @@
         
         <osgi-utils-version>1.0.12.20220628_205152_6d1b9262_develop</osgi-utils-version>
         <karaf-version>4.3.3</karaf-version>
-        <osgi-liquibase-version>1.2.1.20220703_224104_56ad25bb_develop</osgi-liquibase-version>
+        <osgi-liquibase-version>1.2.1.20220826_102142_fb1bf6fd_feature_JNG_3965_ChangeLogCannotBeLoaded</osgi-liquibase-version>
         <jose4j-version>0.7.2</jose4j-version>
 
         <apache-httpclient-karaf-features-version>1.0.0</apache-httpclient-karaf-features-version>
