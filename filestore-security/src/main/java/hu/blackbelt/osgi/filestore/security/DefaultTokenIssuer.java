@@ -11,6 +11,7 @@ import org.jose4j.lang.JoseException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.Designate;
 
 import java.util.Map;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class DefaultTokenIssuer implements TokenIssuer {
 
     private String algorithm;
+    @Reference
     private KeyProvider keyProvider;
     private String expectedIssuers;
     private String expectedAudiencePrefix;
@@ -28,7 +30,6 @@ public class DefaultTokenIssuer implements TokenIssuer {
 
     @Activate
     void start(TokenServiceConfig config) {
-        keyProvider = new KeyProvider(config);
         algorithm = config.algorithm();
         expectedIssuers = config.issuer();
         expectedAudiencePrefix = config.audiencePrefix();
