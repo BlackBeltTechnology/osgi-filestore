@@ -82,7 +82,6 @@ public class FilestoreTest {
     @SneakyThrows
     public Option[] config() {
         final String issuer = "Issuer";
-//        final String secret = "c85830cff937442bf5993cb8f6279122cf619685802557db881c8a16825c92b33474697015ae9c50fd441c9d950d2f4c70b2ec01c17e218c93625a456997ce4c";
 
         return combine(karafConfig(this.getClass()),
 
