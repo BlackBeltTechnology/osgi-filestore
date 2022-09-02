@@ -14,6 +14,7 @@ import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.Designate;
 
 import java.util.Collections;
@@ -26,6 +27,8 @@ import java.util.stream.Collectors;
 public class DefaultTokenValidator implements TokenValidator {
 
     private String algorithm;
+
+    @Reference
     private KeyProvider keyProvider;
     private String issuers;
     private String audiencePrefix;
@@ -33,7 +36,6 @@ public class DefaultTokenValidator implements TokenValidator {
 
     @Activate
     void start(TokenServiceConfig config) {
-        keyProvider = new KeyProvider(config);
         algorithm = config.algorithm();
         issuers = config.issuer();
         audiencePrefix = config.audiencePrefix();
