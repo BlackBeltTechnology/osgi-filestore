@@ -28,10 +28,7 @@ import org.ops4j.pax.exam.options.RawUrlReference;
 import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,6 +36,7 @@ import java.util.stream.Collectors;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.OptionUtils.combine;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.*;
@@ -51,7 +49,6 @@ public class KarafFeatureProvider {
     public static final String HAMCREST = "org.apache.servicemix.bundles.hamcrest";
 
     public static final Integer SERVICE_TIMEOUT = 30000;
-    public static final String KARAF_VERSION = "4.3.3";
 
     public static MavenArtifactUrlReference  karafUrl() {
         return maven()
@@ -134,12 +131,12 @@ public class KarafFeatureProvider {
                 vmOption("--patch-module"),
                 vmOption(
                         "java.base=lib/endorsed/org.apache.karaf.specs.locator-"
-                                + System.getProperty("karafVersion", KARAF_VERSION)
+                                + System.getProperty("karafVersion")
                                 + ".jar"),
                 vmOption("--patch-module"),
                 vmOption(
                         "java.xml=lib/endorsed/org.apache.karaf.specs.java.xml-"
-                                + System.getProperty("karafVersion", KARAF_VERSION)
+                                + System.getProperty("karafVersion")
                                 + ".jar"),
                 vmOption("--add-opens"),
                 vmOption("java.base/java.security=ALL-UNNAMED"),
@@ -209,7 +206,7 @@ public class KarafFeatureProvider {
         return getOsgiService(bundleContext, type, null, SERVICE_TIMEOUT);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static  <T> T getOsgiService(BundleContext bundleContext, Class<T> type, String filter, long timeout) {
         ServiceTracker<T, T> tracker;
         try {
