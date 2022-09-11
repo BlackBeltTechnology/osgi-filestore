@@ -9,7 +9,7 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>mapper-reports</artifactId>
+    <artifactId>filestore-reports</artifactId>
 
     <dependencies>
         <dependency>
