@@ -1,2 +1,17 @@
-# osgi-filestore
+= osgi-filestore
 
+image::https://github.com/BlackBeltTechnology/osgi-filestore/actions/workflows/build.yml/badge.svg?branch=develop[link="https://github.com/BlackBeltTechnology/osgi-filestore/actions/workflows/build.yml" float="center"]
+
+== Introduction
+
+This is a simple blob based file store service, which can store files in RDBMS and filesystem, it has Servlet for
+upload and download and act as an OSGi service.
+
+== Contributing to the project
+
+Everyone is welcome to contribute to osgi-filestore! As a starter, please read the corresponding link:CONTRIBUTING.adoc[CONTRIBUTING] guide for details!
+
+
+== License
+
+This project is licensed under the https://www.apache.org/licenses/LICENSE-2.0[Apache License 2.0].
