@@ -36,13 +36,15 @@
         <logback-test-config>${maven.multiModuleProjectDirectory}/logback-test.xml</logback-test-config>
 
         <surefire-version>3.0.0-M7</surefire-version>
+        <pax-exam-version>4.13.4</pax-exam-version>
 
         <!-- Code Quality-->
-        <sonar-maven-plugin-version>3.7.0.1746</sonar-maven-plugin-version>
+        <sonar-maven-plugin-version>3.9.1.2184</sonar-maven-plugin-version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.language>java</sonar.language>
         <sonar.java.source>${java.version}</sonar.java.source>
+        <jacoco.version>0.8.8</jacoco.version>
 
     </properties>
 
@@ -245,6 +247,30 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <propertyName>jacoco.agent</propertyName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
         
         <pluginManagement>
@@ -348,12 +374,13 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${surefire-version}</version>
                     <configuration>
-                        <argLine>-Dfile.encoding=UTF-8</argLine>
                         <trimStackTrace>false</trimStackTrace>
                         <systemPropertyVariables>
                             <logback.configurationFile>${logback-test-config}</logback.configurationFile>
                         </systemPropertyVariables>
+                        <!--suppress UnresolvedMavenProperty -->
                         <argLine>
+                            ${jacoco.agent}
                             -Dfile.encoding=UTF-8
                             --add-opens java.base/java.lang=ALL-UNNAMED
                             --add-opens java.base/java.util=ALL-UNNAMED
@@ -388,6 +415,7 @@
                 <module>filestore-itest</module>
                 <module>features</module>
                 <module>kar</module>
+                <module>filestore-reports</module>
             </modules>
         </profile>
 
