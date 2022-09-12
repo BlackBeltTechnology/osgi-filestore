@@ -23,9 +23,6 @@ Apache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)
 Maven home: /opt/homebrew/Cellar/maven/3.8.4/libexec
 ```
 
-Please make sure your development environment complies with the requirements discussed under the relevant section of the parent
-project's https://github.com/BlackBeltTechnology/judo-community/blob/develop/CONTRIBUTING.adoc[CONTRIBUTING] guide.
-
 ## Code Structure
 
 This project follows a standard Java project structure, governed by Maven.
