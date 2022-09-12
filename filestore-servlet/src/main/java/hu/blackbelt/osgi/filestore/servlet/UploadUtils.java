@@ -1,5 +1,25 @@
 package hu.blackbelt.osgi.filestore.servlet;
 
+/*-
+ * #%L
+ * Filestore servlet (file upload)
+ * %%
+ * Copyright (C) 2018 - 2022 BlackBelt Technology
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.json.XML;
@@ -42,10 +62,11 @@ import static hu.blackbelt.osgi.filestore.servlet.Constants.TAG_MSG_START;
 import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_DELETED_TRUE;
 import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_ERROR_ITEM_NOT_FOUND;
 import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_TPL;
-import static hu.blackbelt.osgi.filestore.servlet.UploadServlet.PER_THREAD_REQUEST;
 
 @Slf4j
 public final class UploadUtils {
+
+    public static final ThreadLocal<HttpServletRequest> PER_THREAD_REQUEST = new ThreadLocal<>();
 
     private UploadUtils() { }
 

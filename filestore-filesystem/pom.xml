@@ -4,8 +4,7 @@
     <parent>
         <groupId>hu.blackbelt.osgi.filestore</groupId>
         <artifactId>parent</artifactId>
-        <version>1.2.0</version>
-        <relativePath>../</relativePath>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>filestore-filesystem</artifactId>
@@ -53,6 +52,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>filestore-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>filestore-security-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 

@@ -1,5 +1,25 @@
 package hu.blackbelt.osgi.filestore.servlet;
 
+/*-
+ * #%L
+ * Filestore servlet (file upload)
+ * %%
+ * Copyright (C) 2018 - 2022 BlackBelt Technology
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 public final class Constants {
     public static final long serialVersionUID = 2740693677625051632L;
 
@@ -33,6 +53,7 @@ public final class Constants {
     public static final String PARAM_REMOVE = "remove";
     public static final String PARAM_SESSION = "new_session";
     public static final String PARAM_SHOW = "show";
+    public static final String PARAM_KEEP_SESSION = "keep_session";
 
     public static final String MULTI_SUFFIX = "[]";
 
@@ -52,17 +73,28 @@ public final class Constants {
     public static final String HEADER_ACCESS_CONTROL_REQUEST_HEADERS = "Access-Control-Request-Headers";
     public static final String HEADER_ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";
     public static final String HEADER_ACCESS_CONTROL_REQUEST_METHOD = "Access-Control-Request-Method";
+    public static final String HEADER_ACCESS_CONTROL_MAX_AGE = "Access-Control-Max-Age";
+    public static final String HEADER_ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
 
     public static final String HEADER_ALLOW = "Allow";
+    public static final String HEADER_ACCEPT = "Accept";
+    public static final String HEADER_AUTHORIZATION = "Authorization";
     public static final String METHOD_GET = "GET";
+    public static final String METHOD_POST = "POST";
     public static final String METHOD_OPTIONS = "OPTIONS";
-    public static final String ALLOW_VALUE = METHOD_GET + ":" + " HEAD, POST, PUT, DELETE, TRACE, OPTIONS";
 
+    public static final String HEADER_TOKEN = "X-Token";
+    public static final String HEADER_CONTENT_TYPE = "Content-Type";
+    public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
+    public static final String PARAM_FILE_ID = "id";
 
     public static final String MIMETYPE_TEXT_PLAIN = "text/plain";
     public static final String MIMETYPE_TEXT_HTML = "text/html";
     public static final String MIMETYPE_APPLICATION_JSON = "application/json";
 
+    public static final String HEADER_ORIGIN = "Origin";
+    public static final String ALL = "*";
+    public static final int CORS_PREFLIGHT_ERROR_CODE = 400;
     public static final String HEADER_ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
     public static final String HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
 
@@ -109,6 +141,12 @@ public final class Constants {
     public static final String KEY_SERVER_ERROR = "server_error";
     public static final String KEY_BUSY = "busy";
     public static final String KEY_RESTRICTED = "restricted";
+    public static final String KEY_MISSING_TOKEN = "missing_token";
+    public static final String KEY_MISSING_PARAMETER = "missing_parameter";
+    public static final String KEY_INVALID_MIME_TYPE = "invalid_mime_type";
+    public static final String KEY_INVALID_TOKEN = "invalid_token";
+
+    public static final String KEY_NOT_READY = "not_ready";
 
     private Constants() { }
 }
