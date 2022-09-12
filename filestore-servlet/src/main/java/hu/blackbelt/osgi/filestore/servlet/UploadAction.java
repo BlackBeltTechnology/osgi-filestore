@@ -1,7 +1,27 @@
 package hu.blackbelt.osgi.filestore.servlet;
 
-import hu.blackbelt.osgi.fileupload.exceptions.UploadActionException;
-import hu.blackbelt.osgi.fileupload.exceptions.UploadCanceledException;
+/*-
+ * #%L
+ * Filestore servlet (file upload)
+ * %%
+ * Copyright (C) 2018 - 2022 BlackBelt Technology
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+import hu.blackbelt.osgi.filestore.servlet.exceptions.UploadActionException;
+import hu.blackbelt.osgi.filestore.servlet.exceptions.UploadCanceledException;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletConfig;
@@ -15,18 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static hu.blackbelt.osgi.filestore.servlet.Constants.PARAM_REMOVE;
-import static hu.blackbelt.osgi.filestore.servlet.Constants.TRUE;
-import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_CANCELED_S_CANCELED;
-import static hu.blackbelt.osgi.filestore.servlet.Constants.XML_ERROR_S_ERROR;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.findFileItem;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.findItemByFieldName;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getMyLastReceivedFileItems;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.getMySessionFileItems;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.removeSessionFileItems;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.removeUploadedFile;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.renderXmlResponse;
-import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.statusToString;
+import static hu.blackbelt.osgi.filestore.servlet.Constants.*;
+import static hu.blackbelt.osgi.filestore.servlet.Constants.PARAM_KEEP_SESSION;
+import static hu.blackbelt.osgi.filestore.servlet.UploadUtils.*;
 
 /**
  * <p>Class used to manipulate the data received in the server side.</p>
@@ -170,7 +181,7 @@ public class UploadAction extends UploadServlet {
         PER_THREAD_REQUEST.set(request);
         try {
             // Receive the files and form elements, updating the progress status
-            error = super.parsePostRequest(request, response);
+            error = super.parsePostRequest(request, response, null);
             if (error == null) {
                 // Fill files status before executing user code which could remove session files
                 getFileItemsSummary(request, tags);
@@ -207,7 +218,7 @@ public class UploadAction extends UploadServlet {
             postResponse = statusToString(tags);
             renderXmlResponse(request, response, postResponse, true);
         }
-        finish(request, postResponse);
+        finish(request, postResponse, request.getParameter(PARAM_KEEP_SESSION) != null ? Boolean.parseBoolean(request.getParameter(PARAM_KEEP_SESSION)) : false);
 
         if (removeSessionFiles) {
             removeSessionFileItems(request, removeData);
