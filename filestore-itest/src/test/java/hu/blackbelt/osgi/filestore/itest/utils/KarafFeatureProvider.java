@@ -157,7 +157,8 @@ public class KarafFeatureProvider {
                 vmOption("--add-exports=java.base/sun.net.www.protocol.jar=ALL-UNNAMED"),
                 vmOption("--add-exports=jdk.naming.rmi/com.sun.jndi.url.rmi=ALL-UNNAMED"),
                 vmOption("-classpath"),
-                vmOption("lib/jdk9plus/*" + File.pathSeparator + "lib/boot/*"),
+                vmOption("lib/jdk9plus/*" + File.pathSeparator + "lib/boot/*"
+                        + File.pathSeparator + "lib/endorsed/*"),
                 vmOption("-Xmx2048M"),
                 // avoid integration tests stealing focus on OS X
                 vmOption("-Djava.awt.headless=true"),
