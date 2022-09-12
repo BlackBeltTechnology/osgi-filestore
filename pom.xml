@@ -9,7 +9,7 @@
     <name>OSGi filestore parent</name>
     <description>Parent project of OSGi filestore.</description>
     <properties>
-        <revision>1.2.1-SNAPSHOT</revision>
+        <revision>1.2.1</revision>
         <project-shortname>osgi-filestore</project-shortname>
         <project-repositoryId>BlackBeltTechnology/osgi-filestore</project-repositoryId>
 
