@@ -44,6 +44,9 @@
                 <configuration>
                     <argLine>-Dfile.encoding=UTF-8</argLine>
                     <trimStackTrace>false</trimStackTrace>
+                    <systemPropertyVariables>
+                        <karafVersion>${karaf-version}</karafVersion>
+                    </systemPropertyVariables>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -162,8 +165,4 @@
         </dependency>
     </dependencies>
 
-    <properties>
-        <surefire-version>3.0.0-M5</surefire-version>
-        <pax-exam-version>4.13.4</pax-exam-version>
-    </properties>
 </project>
