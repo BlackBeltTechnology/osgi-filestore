@@ -94,7 +94,7 @@ jobs:
         run: |-
           ./mvnw -B -Dstyle.color=always \
           -Drevision=${{ steps.version.outputs.version }} \
-          clean package
+          clean install
 
       - name: 🎤 Create message
         id: message
