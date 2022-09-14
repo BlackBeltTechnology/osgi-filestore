@@ -30,7 +30,7 @@
 
         <osgi-liquibase-version>1.2.1</osgi-liquibase-version>
         <osgi-utils-version>1.0.12</osgi-utils-version>
-        <apache-httpclient-karaf-features-version>1.0.0</apache-httpclient-karaf-features-version>
+        <karaf-features-version>2.0.0.20220914_195648_137a7afe_feature_JNG_3834_PrepareRelease</karaf-features-version>
 
         <!--suppress UnresolvedMavenProperty -->
         <logback-test-config>${maven.multiModuleProjectDirectory}/logback-test.xml</logback-test-config>
