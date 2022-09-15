@@ -62,11 +62,6 @@
             <artifactId>mime-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>hu.blackbelt.osgi.filestore</groupId>
-            <artifactId>filestore-itest</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
     <build>
