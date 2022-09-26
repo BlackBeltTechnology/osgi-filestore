@@ -1,4 +1,4 @@
-name: Build project for Dependabot
+name: Build project
 
 on:
   pull_request_target:
