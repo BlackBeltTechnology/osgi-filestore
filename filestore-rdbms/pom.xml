@@ -111,7 +111,7 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.14.3</version>
+            <version>1.17.3</version>
             <scope>test</scope>
         </dependency>
 
@@ -131,36 +131,25 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.14.3</version>
+            <version>1.17.3</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <version>1.14.3</version>
+            <version>1.17.3</version>
         </dependency>
 
+        <!--
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.6.2</version>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.9.1</version>
             <scope>test</scope>
         </dependency>
+        -->
 
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.6.2</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <version>5.6.2</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>javax.transaction</groupId>
             <artifactId>javax.transaction-api</artifactId>
@@ -171,7 +160,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>3.7.7</version>
+            <version>4.8.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -185,7 +174,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>3.7.7</version>
+            <version>4.8.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
