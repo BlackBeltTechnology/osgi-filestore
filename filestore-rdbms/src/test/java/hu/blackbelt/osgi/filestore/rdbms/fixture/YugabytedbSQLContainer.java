@@ -22,7 +22,7 @@ package hu.blackbelt.osgi.filestore.rdbms.fixture;
 
 import org.jetbrains.annotations.NotNull;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.containers.wait.LogMessageWaitStrategy;
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 
 import java.time.Duration;
 import java.util.HashSet;
