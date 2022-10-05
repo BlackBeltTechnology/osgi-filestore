@@ -28,8 +28,8 @@
         <karaf-version>4.4.1</karaf-version>
         <jose4j-version>0.7.2</jose4j-version>
 
-        <osgi-liquibase-version>1.2.1</osgi-liquibase-version>
-        <osgi-utils-version>1.1.0</osgi-utils-version>
+        <osgi-liquibase-version>1.3.0.20220926_214421_bcfd474c_develop</osgi-liquibase-version>
+        <osgi-utils-version>1.1.1.20220926_225906_2390bae2_develop</osgi-utils-version>
         <karaf-features-version>2.0.0</karaf-features-version>
 
         <!--suppress UnresolvedMavenProperty -->
@@ -578,7 +578,7 @@
                                         <toc>left</toc>
                                         <icons>font</icons>
                                         <sectanchors>true</sectanchors>
-                                        <idprefix/>
+                                        <idprefix />
                                         <idseparator>-</idseparator>
                                     </attributes>
                                 </configuration>
