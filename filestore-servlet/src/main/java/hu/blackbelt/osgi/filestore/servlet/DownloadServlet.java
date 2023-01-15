@@ -124,9 +124,9 @@ public class DownloadServlet extends HttpServlet {
         servletPath = config.servletPath();
         tokenRequired = config.tokenRequired();
 
-        httpService.registerServlet(servletPath, this, null, null);
+        httpService.registerServlet(servletPath, this, getInitParams(servletPath), null);
     }
-
+Rdbms
     @Deactivate
     protected void deactivate() {
         httpService.unregister(servletPath);
@@ -214,4 +214,11 @@ public class DownloadServlet extends HttpServlet {
             PER_THREAD_REQUEST.set(null);
         }
     }
+
+    private Dictionary getInitParams(String name) {
+        Dictionary dictionary = new Hashtable();
+        dictionary.put("servlet-name", "DownloadServlet-" + name);
+        return dictionary;
+    }
+
 }

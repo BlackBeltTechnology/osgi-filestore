@@ -146,7 +146,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
         tokenRequired = config.tokenRequired();
 
         log.info(String.format(MSG_INIT_MAX_SIZE_D_UPLOAD_DELAY_D_CORS_REGEX_S, maxSize, uploadDelay, corsProcessor.getAllowOrigins()));
-        httpService.registerServlet(servletPath, this, null, null);
+        httpService.registerServlet(servletPath, this, getInitParams(servletPath), null);
     }
 
     @Deactivate
@@ -606,4 +606,11 @@ public class UploadServlet extends HttpServlet implements Servlet {
             listener.remove();
         }
     }
+
+    private Dictionary getInitParams(String name) {
+        Dictionary dictionary = new Hashtable();
+        dictionary.put("servlet-name", "UploadServlet-" + name);
+        return dictionary;
+    }
+
 }
