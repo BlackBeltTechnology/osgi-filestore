@@ -126,7 +126,7 @@ public class DownloadServlet extends HttpServlet {
 
         httpService.registerServlet(servletPath, this, getInitParams(servletPath), null);
     }
-Rdbms
+
     @Deactivate
     protected void deactivate() {
         httpService.unregister(servletPath);
