@@ -107,7 +107,7 @@ public class RdbmsFileStoreService implements FileStoreService {
     @Activate
     void activate(BundleContext context, Config config) {
         protocol = config.protocol() != null ? config.protocol().toLowerCase() : null;
-        table = config.table();
+        table = config.table().toUpperCase();
         jdbcTemplate = new JdbcTemplate(dataSource);
 
         Dictionary props = new Hashtable();

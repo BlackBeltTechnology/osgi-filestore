@@ -71,11 +71,11 @@ public class RdbmsFilestoreTest {
         target.dataSource = rdbmsDatasourceFixture.getDataSource();
         rdbmsDatasourceFixture.executeInitiLiquibase(
                 RdbmsFileStoreService.class.getClassLoader(), "liquibase/changelog.xml", rdbmsDatasourceFixture.getDataSource(),
-                ImmutableMap.of("table-name", "FILESTORE"));
+                ImmutableMap.of("table-name", "FILESTORE_CamelCase".toUpperCase()));
 
         RdbmsFileStoreService.Config config = mock(RdbmsFileStoreService.Config.class);
         when(config.protocol()).thenReturn("judostore");
-        when(config.table()).thenReturn("FILESTORE");
+        when(config.table()).thenReturn("FILESTORE_CamelCase".toUpperCase());
 
         target.activate(context, config);
         data = this.getClass().getClassLoader().getResourceAsStream("test.txt");

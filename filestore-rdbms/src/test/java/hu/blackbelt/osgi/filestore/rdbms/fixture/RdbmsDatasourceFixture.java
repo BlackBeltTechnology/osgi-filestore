@@ -78,7 +78,7 @@ public class RdbmsDatasourceFixture {
         if (dialect.equals(POSTGRESQL)) {
             if (container.equals(CONTAINER_NONE) || container.equals(CONTAINER_POSTGRESQL)) {
                 sqlContainer =
-                        (PostgreSQLContainer) new PostgreSQLContainer().withStartupTimeout(Duration.ofSeconds(600));
+                        (PostgreSQLContainer) new PostgreSQLContainer("postgres:latest").withStartupTimeout(Duration.ofSeconds(600));
             } else if (container.equals(CONTAINER_YUGABYTEDB)) {
                 sqlContainer =
                         (YugabytedbSQLContainer) new YugabytedbSQLContainer().withStartupTimeout(Duration.ofSeconds(600));

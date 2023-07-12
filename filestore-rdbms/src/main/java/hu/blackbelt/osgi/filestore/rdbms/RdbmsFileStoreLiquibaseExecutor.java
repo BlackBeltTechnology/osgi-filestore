@@ -57,7 +57,7 @@ public class RdbmsFileStoreLiquibaseExecutor {
     public void activate(BundleContext bundleContext, Config config) {
         try (Connection connection = dataSource.getConnection()) {
             liquibaseExecutor.executeLiquibaseScript(connection, "liquibase/changelog.xml", bundleContext.getBundle(),
-                    ImmutableMap.of("table-name", config.table())
+                    ImmutableMap.of("table-name", config.table().toUpperCase())
             );
         } catch (SQLException | LiquibaseException e) {
             log.error("Could not execute liquibase script", e);
