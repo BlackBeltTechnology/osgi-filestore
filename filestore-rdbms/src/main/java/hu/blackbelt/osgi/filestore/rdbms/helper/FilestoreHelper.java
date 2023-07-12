@@ -34,7 +34,7 @@ public final class FilestoreHelper {
     }
 
     public static String insert(String tableName) { return "INSERT INTO " + tableName + " (FILE_ID, FILENAME, MIME_TYPE, SIZE, CREATE_TIME, DATA)"
-            + "VALUES(?, ?, ?, ?, ?, ?);";}
+            + " VALUES(?, ?, ?, ?, ?, ?);";}
 
     public static String read(String tableName, String fileId, String colName) {
         return "SELECT " + colName + " FROM " + tableName + " WHERE FILE_ID = '" + fileId + "'";
