@@ -32,9 +32,9 @@
         <karaf-version>4.4.3</karaf-version>
         <jose4j-version>0.7.2</jose4j-version>
 
-        <osgi-liquibase-version>1.2.1</osgi-liquibase-version>
-        <osgi-utils-version>1.1.1.20230815_115756_85182ffc_develop</osgi-utils-version>
-        <karaf-features-version>2.0.2.20230815_104222_27121356_develop</karaf-features-version>
+        <osgi-liquibase-version>1.3.0.20230816_004903_2b7e2c59_develop</osgi-liquibase-version>
+        <osgi-utils-version>1.1.1.20230816_012857_80f5914e_develop</osgi-utils-version>
+        <karaf-features-version>2.0.2.20230816_002931_444d49a5_develop</karaf-features-version>
 
         <!--suppress UnresolvedMavenProperty -->
         <logback-test-config>${maven.multiModuleProjectDirectory}/logback-test.xml</logback-test-config>
