@@ -156,6 +156,7 @@ public class DownloadServlet extends HttpServlet {
                 downloadToken = null;
             }
             String fileId = request.getParameter(PARAM_FILE_ID);
+            String inlineDispositionFromUrl = request.getParameter(DownloadClaim.DISPOSITION.getJwtClaimName());
 
             if (downloadToken != null) {
                 final String tokenFileId = (String) downloadToken.get(DownloadClaim.FILE_ID);
@@ -170,7 +171,11 @@ public class DownloadServlet extends HttpServlet {
             String fileName = fileStoreService.getFileName(fileId);
             String contentType = fileStoreService.getMimeType(fileId);
             long size = fileStoreService.getSize(fileId);
-            final Optional<String> disposition = Optional.ofNullable(downloadToken).map(t -> (String) t.get(DownloadClaim.DISPOSITION));
+            Optional<String> disposition = Optional.ofNullable(inlineDispositionFromUrl);
+            if (disposition.isEmpty()) {
+                disposition = Optional.ofNullable(downloadToken).map(t -> (String) t.get(DownloadClaim.DISPOSITION));
+            }
+
             if (fileName == null && downloadToken != null) {
                 fileName = (String) downloadToken.get(DownloadClaim.FILE_NAME);
             }
