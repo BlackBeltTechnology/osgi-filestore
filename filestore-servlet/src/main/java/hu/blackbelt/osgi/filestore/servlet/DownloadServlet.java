@@ -80,7 +80,7 @@ public class DownloadServlet extends HttpServlet {
         String cors_allowHeaders() default HEADER_CONTENT_TYPE + "," + HEADER_ORIGIN + "," + HEADER_ACCEPT + "," + HEADER_AUTHORIZATION;
 
         @AttributeDefinition(name = "CORS expose headers", description = "Comma-separated list of Access-Control-Expose-Headers")
-        String cors_exposeHeaders() default HEADER_CONTENT_TYPE;
+        String cors_exposeHeaders() default HEADER_CONTENT_TYPE + "," + HEADER_CONTENT_DISPOSITION;
 
         @AttributeDefinition(name = "CORS max age", description = "Access-Control-Max-Age")
         int cors_maxAge() default -1;
