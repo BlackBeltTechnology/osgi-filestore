@@ -26,6 +26,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import hu.blackbelt.osgi.filestore.api.FileStoreService;
+import hu.blackbelt.osgi.filestore.api.FilenameUtils;
 import hu.blackbelt.osgi.filestore.rdbms.helper.FileEntity;
 import hu.blackbelt.osgi.filestore.rdbms.helper.FilestoreHelper;
 import hu.blackbelt.osgi.filestore.urlhandler.FileStoreUrlStreamHandler;
@@ -133,6 +134,9 @@ public class RdbmsFileStoreService implements FileStoreService {
             } else {
                 file.setFilename(file.getFileId() + ".bin");
             }
+        } else {
+            String fn = FilenameUtils.makeValidFilename(fileName);
+            file.setFilename(fn);
         }
         if (isNullOrEmpty(mimeType)) {
             file.setMimeType(mimeTypeService.getMimeType(file.getFilename()));
@@ -227,7 +231,7 @@ public class RdbmsFileStoreService implements FileStoreService {
 
     private String getStrippedId(String id) {
         String cleanedId = id;
-        if (id != null && id.startsWith(getProtocol()) && id.split(":").length >= 2) {
+        if (id != null && id.contains(":") && id.split(":").length >= 2) {
             cleanedId = id.split(":")[1];
         }
         return cleanedId;
