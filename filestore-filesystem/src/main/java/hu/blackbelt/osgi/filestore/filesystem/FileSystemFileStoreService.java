@@ -24,6 +24,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import hu.blackbelt.osgi.filestore.api.FileStoreService;
+import hu.blackbelt.osgi.filestore.api.FilenameUtils;
 import hu.blackbelt.osgi.filestore.urlhandler.FileStoreUrlStreamHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.sling.commons.mime.MimeTypeService;
@@ -130,6 +131,8 @@ public class FileSystemFileStoreService implements FileStoreService {
             } else {
                 fn = fileId + ".bin";
             }
+        } else {
+            fn = FilenameUtils.makeValidFilename(fileName);
         }
         if (isNullOrEmpty(mimeType)) {
             mt = mimeTypeService.getMimeType(fn);
