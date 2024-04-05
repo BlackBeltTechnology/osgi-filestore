@@ -20,8 +20,4 @@ public class FilenameUtils {
         }
         return fn;
     }
-
-    public static void main(String[] args) {
-        System.out.println(makeValidFilename("Hdshddas .....         asxasd...     .dd.... "));
-    }
 }
