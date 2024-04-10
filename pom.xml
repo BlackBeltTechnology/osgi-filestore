@@ -29,12 +29,12 @@
         <guava.version>30.0-jre</guava.version>
         <lombok.version>1.18.22</lombok.version>
         <slf4j.version>1.7.32</slf4j.version>
-        <karaf-version>4.4.3</karaf-version>
+        <karaf-version>4.4.5</karaf-version>
         <jose4j-version>0.7.2</jose4j-version>
 
         <osgi-liquibase-version>1.3.0.20230816_143355_37e35ad8_develop</osgi-liquibase-version>
         <osgi-utils-version>1.1.1.20230914_114955_5e3d2a78_develop</osgi-utils-version>
-        <karaf-features-version>2.0.2.20230914_091647_cbb59ce0_develop</karaf-features-version>
+        <karaf-features-version>2.0.2.20240410_083849_8b6fbfb2_develop</karaf-features-version>
 
         <!--suppress UnresolvedMavenProperty -->
         <logback-test-config>${maven.multiModuleProjectDirectory}/logback-test.xml</logback-test-config>
