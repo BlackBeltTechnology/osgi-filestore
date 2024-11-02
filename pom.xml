@@ -39,8 +39,8 @@
         <!--suppress UnresolvedMavenProperty -->
         <logback-test-config>${maven.multiModuleProjectDirectory}/logback-test.xml</logback-test-config>
 
-        <surefire-version>3.0.0</surefire-version>
-        <pax-exam-version>4.13.4</pax-exam-version>
+        <surefire-version>3.5.1</surefire-version>
+        <pax-exam-version>4.13.5</pax-exam-version>
 
         <!-- Code Quality-->
         <sonar-maven-plugin-version>3.9.1.2184</sonar-maven-plugin-version>
@@ -48,7 +48,7 @@
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.language>java</sonar.language>
         <sonar.java.source>${java.version}</sonar.java.source>
-        <jacoco.version>0.8.8</jacoco.version>
+        <jacoco.version>0.8.12</jacoco.version>
 
     </properties>
 
