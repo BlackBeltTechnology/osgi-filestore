@@ -27,7 +27,7 @@
         <servlet-api.version>2.5</servlet-api.version>
         
         <guava.version>30.0-jre</guava.version>
-        <lombok.version>1.18.22</lombok.version>
+        <lombok.version>1.18.34</lombok.version>
         <slf4j.version>1.7.32</slf4j.version>
         <karaf-version>4.4.5</karaf-version>
         <jose4j-version>0.7.2</jose4j-version>
@@ -38,6 +38,7 @@
 
         <!--suppress UnresolvedMavenProperty -->
         <logback-test-config>${maven.multiModuleProjectDirectory}/logback-test.xml</logback-test-config>
+        <logback-version>1.5.12</logback-version>
 
         <surefire-version>3.5.1</surefire-version>
         <pax-exam-version>4.13.5</pax-exam-version>
@@ -107,7 +108,8 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.11</version>
+            <version>${logback-version}</version>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>
@@ -292,7 +294,7 @@
                     <dependency>
                         <groupId>org.projectlombok</groupId>
                         <artifactId>lombok</artifactId>
-                        <version>1.18.24</version>
+                        <version>${lombok.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
