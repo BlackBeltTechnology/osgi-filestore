@@ -186,6 +186,61 @@
                 <artifactId>jose4j</artifactId>
                 <version>${jose4j-version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>filestore-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>mime-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>mime-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>filestore-filesystem</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>filestore-rdbms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>filestore-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>filestore-security-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>filestore-servlet</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>filestore-urlhandler</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
     

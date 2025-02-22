@@ -133,6 +133,43 @@
             <scope>runtime</scope>
             <version>${karaf-version}</version>
         </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.osgi.filestore</groupId>
+            <artifactId>filestore-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.osgi.filestore</groupId>
+            <artifactId>mime-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.osgi.filestore</groupId>
+            <artifactId>mime-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.osgi.filestore</groupId>
+            <artifactId>filestore-filesystem</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.osgi.filestore</groupId>
+            <artifactId>filestore-rdbms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.osgi.filestore</groupId>
+            <artifactId>filestore-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.osgi.filestore</groupId>
+            <artifactId>filestore-security-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.osgi.filestore</groupId>
+            <artifactId>filestore-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.osgi.filestore</groupId>
+            <artifactId>filestore-urlhandler</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>
