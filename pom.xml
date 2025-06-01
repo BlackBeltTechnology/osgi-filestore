@@ -17,10 +17,10 @@
         <maven.deploy.skip>false</maven.deploy.skip>
         <deployOnly>false</deployOnly>
 
-        <java.version>11</java.version>
+        <java.version>21</java.version>
 
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
 
         <osgi.version>6.0.0</osgi.version>
         <osgi-ds.version>1.3.0</osgi-ds.version>
@@ -29,12 +29,12 @@
         <guava.version>30.1-jre</guava.version>
         <lombok.version>1.18.34</lombok.version>
         <slf4j.version>1.7.32</slf4j.version>
-        <karaf-version>4.4.5</karaf-version>
+        <karaf-version>4.4.7</karaf-version>
         <jose4j-version>0.7.2</jose4j-version>
 
-        <osgi-liquibase-version>1.3.0.20241127_150941_fd6ee64b_develop</osgi-liquibase-version>
-        <osgi-utils-version>1.1.1.20250222_004116_31db11f6_develop</osgi-utils-version>
-        <karaf-features-version>2.0.2.20241127_150036_5c40ade0_develop</karaf-features-version>
+        <osgi-liquibase-version>1.3.0.20250601_215422_5eb1d432_feature_JNG_6310_UpdateEpsilon</osgi-liquibase-version>
+        <osgi-utils-version>1.1.1.20250601_204920_01dd6d46_feature_JNG_6310_UpdateEpsilon</osgi-utils-version>
+        <karaf-features-version>2.0.2.20250601_200046_ae1bb67d_feature_JNG_6310_UpdateEpsilon</karaf-features-version>
 
         <!--suppress UnresolvedMavenProperty -->
         <logback-test-config>${maven.multiModuleProjectDirectory}/logback-test.xml</logback-test-config>
@@ -417,7 +417,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>5.1.8</version>
+                    <version>6.0.0</version>
                     <extensions>true</extensions>
                     <configuration>
                         <instructions>
