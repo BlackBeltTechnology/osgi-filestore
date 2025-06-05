@@ -33,7 +33,7 @@
         <jose4j-version>0.7.2</jose4j-version>
 
         <osgi-liquibase-version>1.3.0.20250604_010845_d41b71db_feature_JNG_6310_UpdateEpsilon</osgi-liquibase-version>
-        <osgi-utils-version>1.1.1.20250604_010043_e504c6c3_feature_JNG_6310_UpdateEpsilon</osgi-utils-version>
+        <osgi-utils-version>1.1.1.20250604_211530_79f02fe5_feature_JNG_6310_UpdateEpsilon</osgi-utils-version>
         <karaf-features-version>2.0.2.20250604_194930_75d69105_feature_JNG_6310_UpdateEpsilon</karaf-features-version>
 
         <!--suppress UnresolvedMavenProperty -->
