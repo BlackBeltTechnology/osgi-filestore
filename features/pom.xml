@@ -87,6 +87,7 @@
                                         <feature>filestore-dependencies</feature>
                                         <feature>filestore-base</feature>
                                         <feature>filestore-filesystem</feature>
+                                        <feature>filestore-s3</feature>
                                         <feature>filestore-rdbms</feature>
                                         <feature>filestore-servlet</feature>
                                         <feature>filestore-security</feature>
