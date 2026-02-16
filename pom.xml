@@ -219,6 +219,12 @@
 
             <dependency>
                 <groupId>hu.blackbelt.osgi.filestore</groupId>
+                <artifactId>filestore-s3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>hu.blackbelt.osgi.filestore</groupId>
                 <artifactId>filestore-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -541,6 +547,7 @@
                 <module>filestore-urlhandler</module>
                 <module>filestore-filesystem</module>
                 <module>filestore-rdbms</module>
+                <module>filestore-s3</module>
                 <module>filestore-security-api</module>
                 <module>filestore-security</module>
                 <module>filestore-servlet</module>
