@@ -23,6 +23,7 @@
 
     <feature name="filestore-full" version="${project.version}" description="Blackbelt :: Filestore :: full" install="false">
         <feature>filestore-filesystem</feature>
+        <feature>filestore-s3</feature>
         <feature>filestore-rdbms</feature>
         <feature>filestore-servlet</feature>
         <feature>filestore-security</feature>
@@ -34,6 +35,15 @@
         <feature>filestore-base</feature>
 
         <bundle>mvn:${project.groupId}/filestore-filesystem/${project.version}</bundle>
+        <bundle>mvn:${project.groupId}/filestore-urlhandler/${project.version}</bundle>
+    </feature>
+
+    <feature name="filestore-s3" version="${project.version}" description="BlackBelt :: Filestore :: s3" install="false">
+        <feature>filestore-ext-guava</feature> <!-- needed to cache metadata -->
+
+        <feature>filestore-base</feature>
+
+        <bundle>mvn:${project.groupId}/filestore-s3/${project.version}</bundle>
         <bundle>mvn:${project.groupId}/filestore-urlhandler/${project.version}</bundle>
     </feature>
 
