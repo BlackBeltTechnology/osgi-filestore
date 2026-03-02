@@ -144,7 +144,7 @@ gitGraph
     branch release/1.0
     checkout release/1.0
     commit id: "release prep"
-    checkout main
+    checkout master
     merge release/1.0 id: "v1.0"
     checkout develop
     merge release/1.0
