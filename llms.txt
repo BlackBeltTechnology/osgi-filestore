@@ -44,6 +44,17 @@ Key facts:
 - [filestore-itest/pom.xml](filestore-itest/pom.xml): Integration tests — boots a full Karaf container via Pax Exam to test OSGi service wiring end-to-end
 - [filestore-reports/pom.xml](filestore-reports/pom.xml): JaCoCo code coverage aggregation across all modules
 
+## Depends on
+
+- [osgi-liquibase](../osgi-liquibase): runtime/osgi-liquibase
+- [osgi-utils](../osgi-utils): runtime/osgi-utils
+
+## Used by
+
+- [judo-platform](../judo-platform): runtime/judo-platform
+- [judo-runtime-core](../judo-runtime-core): runtime/judo-runtime-core
+- [judo-services](../judo-services): runtime/judo-services
+
 ## Optional
 
 - [.github/workflows/build.yml](.github/workflows/build.yml): Main CI/CD build pipeline
