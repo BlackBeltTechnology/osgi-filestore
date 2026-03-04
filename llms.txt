@@ -1,0 +1,51 @@
+# OSGi FileStore
+
+> A unified blob-based file storage service for OSGi/Karaf with pluggable backends (RDBMS, filesystem, S3), HTTP servlets for upload/download, JWT-based security, and custom URL protocol handling.
+
+Key facts:
+- Java 21, Apache License 2.0
+- Maven multi-module project, 14 modules
+- OSGi bundles running in Apache Karaf 4.4.7 with Declarative Services
+- Spring JDBC + Liquibase for RDBMS backend, Guava for metadata caching
+- jose4j for JWT token creation/validation
+- Apache Commons FileUpload for multipart HTTP uploads
+- Tested with JUnit 5, Mockito, Pax Exam (OSGi integration), and TestContainers (PostgreSQL)
+
+## Docs
+
+- [README.md](README.md): Project overview, architecture diagram, and API summary
+- [AGENTS.md](AGENTS.md): Developer guide with build commands, module descriptions, and coding conventions
+- [CONTRIBUTING.md](CONTRIBUTING.md): Development setup, branching model, and submission guidelines
+- [.github/CIFLOW.md](.github/CIFLOW.md): CI/CD pipeline workflow diagrams
+
+## Modules — API Layer
+
+- [filestore-api/pom.xml](filestore-api/pom.xml): Core FileStoreService interface for put/get/exists/metadata operations on files identified by UUID strings
+- [mime-api/pom.xml](mime-api/pom.xml): MimeTypeResolver interface for extension-to-MIME-type mapping
+- [filestore-security-api/pom.xml](filestore-security-api/pom.xml): Token interfaces (TokenValidator, TokenIssuer, UploadClaim, DownloadClaim) for JWT-based access control
+
+## Modules — Implementation Layer
+
+- [filestore-filesystem/pom.xml](filestore-filesystem/pom.xml): Filesystem storage backend — stores files on disk in nested 2-char directories with .properties sidecar metadata
+- [filestore-rdbms/pom.xml](filestore-rdbms/pom.xml): RDBMS storage backend — stores files in a FILESTORE database table using Spring JDBC and Liquibase for schema management
+- [filestore-s3/pom.xml](filestore-s3/pom.xml): S3 cloud storage backend — stores files in Amazon S3 compatible object storage
+- [mime-impl/pom.xml](mime-impl/pom.xml): MIME type resolution implementation using Apache Sling Commons MIME
+- [filestore-security/pom.xml](filestore-security/pom.xml): JWT token creation and validation implementation using jose4j
+
+## Modules — Integration Layer
+
+- [filestore-servlet/pom.xml](filestore-servlet/pom.xml): UploadServlet (multipart POST with progress tracking) and DownloadServlet (GET with Content-Disposition), CORS support, configurable size limits, optional token enforcement
+- [filestore-urlhandler/pom.xml](filestore-urlhandler/pom.xml): Custom OSGi URL stream handler so files can be accessed via protocol:uuid-filename URLs within OSGi
+
+## Modules — Packaging & Testing
+
+- [features/src/main/feature/feature.xml](features/src/main/feature/feature.xml): Karaf feature definitions — filestore-base, filestore-filesystem, filestore-rdbms, filestore-servlet, filestore-security, filestore-full
+- [kar/pom.xml](kar/pom.xml): Packages Karaf features into a deployable .kar archive
+- [filestore-itest/pom.xml](filestore-itest/pom.xml): Integration tests — boots a full Karaf container via Pax Exam to test OSGi service wiring end-to-end
+- [filestore-reports/pom.xml](filestore-reports/pom.xml): JaCoCo code coverage aggregation across all modules
+
+## Optional
+
+- [.github/workflows/build.yml](.github/workflows/build.yml): Main CI/CD build pipeline
+- [.github/workflows/release.yml](.github/workflows/release.yml): Manual release trigger workflow
+- [pom.xml](pom.xml): Root POM — all module definitions, dependency versions, and plugin management
