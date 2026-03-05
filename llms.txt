@@ -28,7 +28,7 @@ Key facts:
 
 - [filestore-filesystem/pom.xml](filestore-filesystem/pom.xml): Filesystem storage backend — stores files on disk in nested 2-char directories with .properties sidecar metadata
 - [filestore-rdbms/pom.xml](filestore-rdbms/pom.xml): RDBMS storage backend — stores files in a FILESTORE database table using Spring JDBC and Liquibase for schema management
-- [filestore-s3/pom.xml](filestore-s3/pom.xml): S3 cloud storage backend — stores files in Amazon S3 compatible object storage
+- [filestore-s3/pom.xml](filestore-s3/pom.xml): S3 cloud storage backend — stores files in Amazon S3 compatible object storage (planned — JNG-6378)
 - [mime-impl/pom.xml](mime-impl/pom.xml): MIME type resolution implementation using Apache Sling Commons MIME
 - [filestore-security/pom.xml](filestore-security/pom.xml): JWT token creation and validation implementation using jose4j
 
@@ -46,14 +46,14 @@ Key facts:
 
 ## Depends on
 
-- [osgi-liquibase](../osgi-liquibase): runtime/osgi-liquibase
-- [osgi-utils](../osgi-utils): runtime/osgi-utils
+- [osgi-liquibase](../osgi-liquibase): OSGi-wrapped Liquibase for database migrations
+- [osgi-utils](../osgi-utils): OSGi utility library — lifecycle tracking, config monitoring, ranked services
 
 ## Used by
 
-- [judo-platform](../judo-platform): runtime/judo-platform
-- [judo-runtime-core](../judo-runtime-core): runtime/judo-runtime-core
-- [judo-services](../judo-services): runtime/judo-services
+- [judo-platform](../judo-platform): Model-driven OSGi runtime platform with REST APIs and Karaf deployment
+- [judo-runtime-core](../judo-runtime-core): Multi-module runtime engine — data access, business logic, REST, and security
+- [judo-services](../judo-services): OSGi runtime services enabling multiple data models in a single Karaf container
 
 ## Optional
 
