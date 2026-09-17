@@ -65,3 +65,6 @@ wercker.env
 
 # pi dashboard local knowledge-base state - machine-local, do not commit
 .pi/dashboard/
+
+# local credentials for opt-in integration tests - never commit
+**/.env
