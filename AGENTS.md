@@ -189,3 +189,40 @@ mvn clean install -pl '!filestore-itest'
 - [README.md](README.md) — Project overview, architecture diagrams, and API summary
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Development setup, build commands, branching, and submission guidelines
 - [.github/CIFLOW.md](.github/CIFLOW.md) — CI/CD pipeline workflow diagrams
+
+## Commands
+
+<!-- Filled from the detected project stack; edit if your commands differ. -->
+
+```bash
+mvn -q dependency:go-offline    # install dependencies
+mvn test       # run tests
+mvn -q package -DskipTests      # build
+```
+
+## Discipline Skills
+
+During implementation, invoke the matching `eng-disciplines` skill when a task
+signal appears. Skills auto-trigger on natural language, but the implement loop
+may never utter the phrase — this table makes the mapping explicit (signals are
+observable in the diff / `tasks.md`, not vague intent):
+
+| Task signal (in diff / tasks.md) | Skill |
+|---|---|
+| touches auth, untrusted input, secrets, webhooks, PII | `security-hardening` |
+| spec has a latency/throughput budget, or a large-data / high-traffic path | `performance-optimization` |
+| new endpoint, job, external call, or "can't tell what happened in prod" | `observability-instrumentation` |
+| non-trivial/irreversible step (migration, public API, cross-boundary) BEFORE it stands | `doubt-driven-review` |
+| a bug surfaces mid-implementation | `systematic-debugging` |
+| runtime state opaque, `console.log` insufficient | `node-inspect-debugger` |
+| feature works + tests pass but the implementation feels heavy | `code-simplification` |
+
+The end gates (`code-review`, `code-quality`) remain unchanged and run at completion before commit.
+
+<!-- dox-doctrine -->
+
+## DOX doctrine
+
+Per-turn DOX doctrine — the kb-first READ discipline and the directory `AGENTS.md`
+WRITE discipline — is injected by the `pi-dashboard-kb-extension`. Tune it in
+`.pi/dashboard/knowledge_base.json` under the `doctrine` key (`inject`, `write`).

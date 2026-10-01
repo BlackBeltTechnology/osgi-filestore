@@ -14,10 +14,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.url.URLStreamHandlerService;
 import com.github.davidmoten.aws.lw.client.Client;
 import com.github.davidmoten.aws.lw.client.HttpMethod;
-import com.github.davidmoten.aws.lw.client.Multipart;
 import com.github.davidmoten.aws.lw.client.Response;
 import com.github.davidmoten.aws.lw.client.ResponseInputStream;
 import com.github.davidmoten.aws.lw.client.ServiceException;
+import com.github.davidmoten.aws.lw.client.xml.builder.Xml;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -178,16 +178,52 @@ public class S3FileStoreService implements FileStoreService {
                 .execute();
     }
 
-    private void putLargeFile(String fileId, InputStream combinedStream, String fileName, String mimeType, String createTime) {
-        Multipart.s3(s3Client)
-                .bucket(bucketName)
-                .key(fileId)
-                .transformCreateRequest(r -> r
-                        .header("Content-Type", mimeType)
-                        .metadata(META_FILENAME, fileName)
-                        .metadata(META_MIME_TYPE, mimeType)
-                        .metadata(META_CREATE_TIME, createTime))
-                .upload(() -> combinedStream);
+    /**
+     * Multipart upload. Not using the client library's {@code Multipart} helper: it sends the
+     * initiate request with no body, hence no {@code Content-Length} (GCS answers 411), and writes
+     * {@code xmlns="http:s3.amazonaws.com/..."} - a malformed URI - on the complete document (GCS
+     * answers 400). Amazon S3 tolerates both.
+     */
+    private void putLargeFile(String fileId, InputStream combinedStream, String fileName, String mimeType, String createTime) throws IOException {
+        String uploadId = s3Client.path(bucketName, fileId).query("uploads").method(HttpMethod.POST)
+                .header("Content-Type", mimeType)
+                .metadata(META_FILENAME, fileName)
+                .metadata(META_MIME_TYPE, mimeType)
+                .metadata(META_CREATE_TIME, createTime)
+                .requestBody(new byte[0]) // empty, not absent: this is what emits Content-Length: 0
+                .responseAsXml().content("UploadId");
+
+        Xml complete = Xml.create("CompleteMultipartUpload");
+        byte[] buffer = new byte[MULTIPART_THRESHOLD];
+        int partNumber = 0;
+        int read;
+        while ((read = readFully(combinedStream, buffer)) > 0) {
+            partNumber++;
+            String eTag = s3Client.path(bucketName, fileId)
+                    .query("partNumber", String.valueOf(partNumber)).query("uploadId", uploadId)
+                    .method(HttpMethod.PUT)
+                    .requestBody(read == buffer.length ? buffer : Arrays.copyOf(buffer, read))
+                    .responseExpectStatusCode(200)
+                    .firstHeader("ETag").orElseThrow(() -> new IOException("Part upload returned no ETag"));
+            complete = complete.element("Part")
+                    .element("ETag").content(eTag).up()
+                    .element("PartNumber").content(String.valueOf(partNumber)).up()
+                    .up();
+        }
+
+        s3Client.path(bucketName, fileId).query("uploadId", uploadId).method(HttpMethod.POST)
+                .requestBody(complete.toString())
+                .execute();
+    }
+
+    /** Fills {@code buffer} unless the stream ends first. @return bytes read, 0 at end of stream. */
+    private static int readFully(InputStream data, byte[] buffer) throws IOException {
+        int total = 0;
+        int read;
+        while (total < buffer.length && (read = data.read(buffer, total, buffer.length - total)) != -1) {
+            total += read;
+        }
+        return total;
     }
 
     @Override
