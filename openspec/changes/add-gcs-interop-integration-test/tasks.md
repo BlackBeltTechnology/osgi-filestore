@@ -83,3 +83,21 @@ One production change only: `S3FileStoreService.putLargeFile` (see section 3b). 
 - [x] Run the full module suite — **31 tests, 0 skipped, 0 failures** (`GcsS3FileStoreServiceTest` 12, `S3FileStoreServiceTest` 10, `S3FileStoreServiceMultipartWireTest` 9)
 - [x] Confirm the only `src/main` diff is `S3FileStoreService.java`, 47 insertions / 11 deletions
 - [x] Confirm `git status` shows no `.env` file as trackable
+
+## 7. Multipart failure handling (added after review)
+
+- [ ] Add wire tests to `S3FileStoreServiceMultipartWireTest` for the four "Multipart failure handling" scenarios (200 + `<Error>` on complete, part failure aborts, failing abort is suppressed, no abort when initiate fails)
+- [ ] Run them against the current code and confirm they fail by name (TDD red)
+- [ ] In `putLargeFile`, read the complete response with `responseAsXml()` and throw when its root element is `Error`
+- [ ] In `putLargeFile`, wrap the part and complete steps in `try`/`catch`: on failure send `DELETE ?uploadId=…`, attach any abort failure with `addSuppressed`, and rethrow the original exception
+- [ ] Run `mvn test -pl filestore-s3` and confirm the wire suite is fully green and the GCS suite is still green
+- [ ] Confirm the `src/main` diff is still confined to `S3FileStoreService.java`
+
+## 8. Documentation follow-up
+
+- [ ] `filestore-s3/GCS_ASSESSMENT.md`: fix the stale pre-fix wording (the subtitle "the current blocker", "it does not work today" on line 4, and the "Impact in judo-platform terms" paragraph claiming a < 5 MB limit)
+- [ ] `filestore-s3/SECURITY.md`: update finding S-14 (unaborted multipart uploads). The code now aborts on failure, and the lifecycle rule stays as a safety net.
+- [ ] `filestore-s3/GCS_INTEROP.md`: update the "interrupted multipart uploads never aborted" quirk the same way
+- [ ] `filestore-s3/SECURITY.md` S-4: downgrade and reword it to say token checks fail open only when no `TokenValidator` is bound, and that judo-platform forces `tokenRequired=true` (`DispatcherServiceActivator:264,280`). Make the same correction in `GCS_FILESTORE_REPORT.md` §5 and the gate list in `GCS_HANDOVER.md`
+- [ ] `GCS_FILESTORE_REPORT.md` and `GCS_HANDOVER.md`: drop abort-on-failure from follow-ups, and update the test counts
+- [ ] `s3-filestore-comparison-report.md`: add a note at the top marking it historical, and point to `GCS_FILESTORE_REPORT.md` §2.4 for the current status of each finding

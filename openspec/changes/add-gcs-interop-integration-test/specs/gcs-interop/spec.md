@@ -98,6 +98,36 @@ Neither is reachable through configuration, and `MULTIPART_THRESHOLD` is a `priv
 - **WHEN** the existing `testPutAndGetLargeFileMultipart` 6 MB test runs
 - **THEN** it passes unchanged, i.e. the replacement is a superset of the previous behaviour
 
+### Requirement: Multipart failure handling
+
+`putLargeFile` MUST NOT report success for an upload the backend did not complete, and MUST attempt to abort a multipart upload it initiated but could not complete. HTTP status alone is not enough to decide success, because `CompleteMultipartUpload` may answer HTTP 200 with an `<Error>` document.
+
+#### Scenario: Complete answers 200 with an error document
+- **GIVEN** the recording `HttpClient` fake answers the `CompleteMultipartUpload` request with HTTP 200 and the body `<Error><Code>InternalError</Code></Error>`
+- **WHEN** a payload above `MULTIPART_THRESHOLD` is passed to `put(...)`
+- **THEN** `put(...)` throws, and no `fileId` is returned
+- **AND** an `AbortMultipartUpload` request (`DELETE` with the same `uploadId`) is recorded
+
+#### Scenario: A failure after initiate aborts the upload
+- **GIVEN** the initiate request succeeded and returned an `uploadId`
+- **AND** the fake answers an upload-part request with a non-2xx status
+- **WHEN** `put(...)` is called
+- **THEN** a `DELETE` request carrying that `uploadId` is recorded after the failing request
+- **AND** the exception thrown by `put(...)` is the one caused by the part failure
+
+#### Scenario: A failing abort does not mask the original error
+- **GIVEN** an upload-part request fails
+- **AND** the fake also answers the abort `DELETE` with a non-2xx status
+- **WHEN** `put(...)` is called
+- **THEN** the thrown exception is the part failure
+- **AND** the abort failure is attached to it as a suppressed exception
+
+#### Scenario: No abort without an initiated upload
+- **GIVEN** the initiate request itself fails
+- **WHEN** `put(...)` is called
+- **THEN** `put(...)` throws
+- **AND** no `DELETE` request is recorded
+
 ### Requirement: Existence check
 
 `exists()` MUST report absence as a boolean rather than propagating the underlying HTTP 404 as an exception.

@@ -51,6 +51,21 @@ What kept the widened scope honest:
 - **The tests were written to fail against the old code**, and verified to do so by name, so they guard the defect rather than restate the implementation.
 - **Rejected as scope creep** within the fix itself: abort-on-failure handling, `S3_XMLNS`/`EMPTY_BODY` constants, and a DRY refactor of `putSmallFile` (which was never broken). Failure behaviour is therefore unchanged from the original — an interrupted upload leaves an incomplete multipart upload for a bucket lifecycle rule to reap.
 
+## Decision: add multipart failure handling after review (reverses the abort exclusion above)
+
+Review found two gaps that the hand-driven multipart path now owns, because the library helper that might have covered them is no longer used:
+
+1. **A 200 response can carry an error.** Amazon documents that `CompleteMultipartUpload` may answer HTTP 200 with an `<Error>` document when assembly fails after the response has started. The library decides success from the HTTP status alone: `Request.responseAsBytes()` throws only when the client's `ExceptionFactory` rejects the response, which by default means a non-2xx status, and `execute()` discards the body. So `put()` could return a `fileId` for an object that does not exist. The fix reads the complete response with `responseAsXml()` and throws when the root element is `Error`, using the library's public API only.
+2. **Abort on failure.** Earlier this was rejected as scope creep. It is reversed here because the cost is small and contained (a `try`/`catch` around the part and complete steps, one `DELETE ?uploadId=…`), and because without it every failed upload of 5 MB or more is billed until a bucket rule reaps it.
+
+Rules for the abort:
+
+- It is **best-effort**. The original exception is always the one propagated. If the abort itself fails, its exception is attached with `addSuppressed` and never replaces the original.
+- It runs only after a successful initiate, because before that there is no `uploadId` to abort.
+- The `AbortIncompleteMultipartUpload` bucket lifecycle rule **stays recommended** as a safety net for cases code cannot cover (JVM crash, network partition during the abort).
+
+Both are pinned by wire tests using the existing recording `HttpClient` fake, so no network is needed. Failure semantics for small files (`putSmallFile`) are unchanged.
+
 ## Known third-party quirks recorded for future readers
 
 1. **AWS CLI v2 >= 2.23 fails against GCS** with `SignatureDoesNotMatch` because it injects CRC32 checksums and `aws-chunked` payload signing. Workaround for manual probing: `AWS_REQUEST_CHECKSUM_CALCULATION=when_required`. This affects only the CLI; `aws-lightweight-client-java` performs plain SigV4 and is unaffected.

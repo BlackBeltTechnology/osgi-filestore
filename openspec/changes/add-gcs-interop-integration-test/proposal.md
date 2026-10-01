@@ -26,10 +26,11 @@ This change makes all three facts *tested* rather than *believed*, and fixes the
   - `GcsS3FileStoreServiceTest.putAndGetLargeFileViaMultipart` and `putAndGetThreePartFileViaMultipart` — 6 MB and 3-part round trips against a real bucket, byte-exact, with metadata surviving assembly.
 - **Setup documentation** `filestore-s3/GCS_INTEROP.md` covering the `gcloud` CLI path and the Cloud Console click-path for creating the bucket, service account, IAM binding and HMAC key, plus the full defect analysis, the evidence, and the rejected/available fix options.
 - **`.gitignore`** gains `**/.env` so real credentials cannot be committed.
+- **Multipart failure handling** in `putLargeFile`, added after review: a `CompleteMultipartUpload` answered with HTTP 200 and an `<Error>` body makes `put()` throw instead of returning an ID for an object that does not exist, and a failure after initiate sends a best-effort `AbortMultipartUpload` so incomplete uploads are not left behind to be billed. Pinned by network-free wire tests.
 
 ## Capabilities
 
-- **gcs-interop**: verified S3-interoperability of `S3FileStoreService` against Google Cloud Storage — the metadata-prefix contract, the small-file path, and the documented, tested absence of large-file support.
+- **gcs-interop**: verified S3-interoperability of `S3FileStoreService` against Google Cloud Storage — the metadata-prefix contract, the small-file path, and large-file multipart upload, including its failure handling.
 
 ## Impact
 
