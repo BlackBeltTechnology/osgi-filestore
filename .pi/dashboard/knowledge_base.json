@@ -1,0 +1,6 @@
+{
+  "sources": [{ "kind": "filesystem", "ref": "." }],
+  "indexAgentsFiles": true,
+  "directoryLevelAgents": { "enabled": true },
+  "doctrine": { "inject": "kb", "write": true }
+}
