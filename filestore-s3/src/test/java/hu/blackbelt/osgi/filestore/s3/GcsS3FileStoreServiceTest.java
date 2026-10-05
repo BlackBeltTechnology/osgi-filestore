@@ -50,7 +50,7 @@ import static org.mockito.Mockito.when;
  *
  * <p>Skipped entirely unless {@code GCS_TEST_ENABLED=true} plus bucket and HMAC credentials are
  * available from {@code filestore-s3/.env} or the environment. See
- * {@code filestore-s3/GCS_INTEROP.md}.
+ * {@code docs/gcs/setup.md}.
  *
  * <p>Unlike {@link S3FileStoreServiceTest}, this test does <strong>not</strong> pre-assign
  * {@code target.s3Client}: it lets {@code activate()} build the client from configuration so the

@@ -248,6 +248,7 @@ presigned-URL support on GCS and the library's broken `presignedUrl()`.
 
 ## References
 
-- [CONFIGURATION.md](CONFIGURATION.md) — every configuration surface, defaults, and the silent-failure traps
-- [GCS_INTEROP.md](GCS_INTEROP.md) — provisioning, quirks, the multipart defect and its fix
-- [GCS_ASSESSMENT.md](GCS_ASSESSMENT.md) — benefits/costs of GCS as the backend
+- [CONFIGURATION.md](CONFIGURATION.md): every configuration surface, defaults, and the silent-failure traps
+- [docs/gcs/setup.md](../docs/gcs/setup.md): provisioning, production bucket, GCS quirks
+- [docs/gcs/multipart-fix.md](../docs/gcs/multipart-fix.md): the multipart defect, its fix and failure handling
+- [docs/gcs/assessment.md](../docs/gcs/assessment.md): benefits and costs of GCS as the backend

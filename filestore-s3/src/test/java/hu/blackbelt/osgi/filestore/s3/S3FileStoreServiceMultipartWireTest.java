@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
  * <p>The two integration suites (MinIO, GCS) prove the outcome on real backends. This test proves the
  * mechanism, so a regression is caught by name rather than as an opaque 400/411 from a bucket. The two
  * tests named {@code fixed*} guard the defects that once made files ≥ 5 MB unstorable on Google Cloud
- * Storage — see GCS_INTEROP.md §6.1. What is pinned:
+ * Storage — see docs/gcs/multipart-fix.md. What is pinned:
  * <ul>
  *   <li>the multipart initiate carries an <em>empty</em> body, never an <em>absent</em> one — that is
  *       what makes the JDK emit {@code Content-Length: 0}, which Google Cloud Storage requires;</li>
@@ -242,7 +242,7 @@ public class S3FileStoreServiceMultipartWireTest {
         Recorded initiate = only(Recorded::isInitiate, "initiate");
         assertNotNull(initiate.body,
                 "initiate body must be present (empty), not null - an absent body omits "
-                        + "Content-Length and GCS answers 411; see GCS_INTEROP.md §6.1");
+                        + "Content-Length and GCS answers 411; see docs/gcs/multipart-fix.md");
         assertThat(initiate.body.length, equalTo(0));
         assertThat(initiate.headers.get("Content-Type"), equalTo("application/octet-stream"));
         assertThat(initiate.headers.get("x-amz-meta-filename"), equalTo("wire.bin"));

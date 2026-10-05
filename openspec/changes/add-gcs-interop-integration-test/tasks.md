@@ -10,7 +10,7 @@ One production change only: `S3FileStoreService.putLargeFile` (see section 3b). 
 ## 2. GCS fixture
 
 - [x] Add `filestore-s3/src/test/java/hu/blackbelt/osgi/filestore/s3/fixture/GcsFixture.java` exposing `bucketName`, `endpoint`, `accessKey`, `secretKey`, `region`, `protocol` read through `DotEnv`
-- [x] Do NOT create the bucket — GCS requires `x-goog-project-id` for bucket creation over the XML API; fail with a message pointing at `GCS_INTEROP.md` instead
+- [x] Do NOT create the bucket — GCS requires `x-goog-project-id` for bucket creation over the XML API; fail with a message pointing at `docs/gcs/setup.md` instead
 - [x] Add a `deleteObject(key)` helper used for per-test cleanup
 
 ## 3. Integration test
@@ -63,7 +63,7 @@ One production change only: `S3FileStoreService.putLargeFile` (see section 3b). 
 
 ## 5. Setup documentation
 
-- [x] Add `filestore-s3/GCS_INTEROP.md`
+- [x] Add `filestore-s3/GCS_INTEROP.md` (since split into `docs/gcs/setup.md` and `docs/gcs/multipart-fix.md`, see §9)
 - [x] Section: step-by-step `gcloud` CLI commands (enable API, create bucket, lifecycle rule, service account, bucket-scoped IAM binding, HMAC key)
 - [x] Section: step-by-step Cloud Console click-path for the same, including Cloud Storage → Settings → Interoperability for the HMAC key
 - [x] Section: how to run the test, and what a skipped run looks like
@@ -73,7 +73,7 @@ One production change only: `S3FileStoreService.putLargeFile` (see section 3b). 
 - [x] Section §7: status and file inventory, naming the single production change
 - [x] Add `SECURITY.md` — trust boundaries and 15 findings with severities, each traced to file:line (token enforcement off by default, CORS `*` with credentials, static plaintext credentials, `http://` endpoints, never-expiring tokens, ephemeral signing keys, no content scanning, weak tenant isolation, unaborted multipart uploads), plus a go-live hardening checklist and an explicit verified/unverified split
 - [x] Add `CONFIGURATION.md` — both configuration paths (judo-platform `JUDO_PLATFORM_*` env vars vs. a direct `.cfg`), every property with its real default, servlet and token settings, the `.env` test path, six silent-failure traps, and a worked GCS example
-- [x] Add `GCS_ASSESSMENT.md` — benefits and costs of GCS as the backend, for the go/no-go decision
+- [x] Add `GCS_ASSESSMENT.md` (now `docs/gcs/assessment.md`, see §9) — benefits and costs of GCS as the backend, for the go/no-go decision
 
 ## 6. Verification
 
@@ -95,9 +95,16 @@ One production change only: `S3FileStoreService.putLargeFile` (see section 3b). 
 
 ## 8. Documentation follow-up
 
-- [ ] `filestore-s3/GCS_ASSESSMENT.md`: fix the stale pre-fix wording (the subtitle "the current blocker", "it does not work today" on line 4, and the "Impact in judo-platform terms" paragraph claiming a < 5 MB limit)
+- [x] `filestore-s3/GCS_ASSESSMENT.md`: fix the stale pre-fix wording (the subtitle "the current blocker", "it does not work today" on line 4, and the "Impact in judo-platform terms" paragraph claiming a < 5 MB limit)
 - [ ] `filestore-s3/SECURITY.md`: update finding S-14 (unaborted multipart uploads). The code now aborts on failure, and the lifecycle rule stays as a safety net.
-- [ ] `filestore-s3/GCS_INTEROP.md`: update the "interrupted multipart uploads never aborted" quirk the same way
-- [ ] `filestore-s3/SECURITY.md` S-4: downgrade and reword it to say token checks fail open only when no `TokenValidator` is bound, and that judo-platform forces `tokenRequired=true` (`DispatcherServiceActivator:264,280`). Make the same correction in `GCS_FILESTORE_REPORT.md` §5 and the gate list in `GCS_HANDOVER.md`
-- [ ] `GCS_FILESTORE_REPORT.md` and `GCS_HANDOVER.md`: drop abort-on-failure from follow-ups, and update the test counts
-- [ ] `s3-filestore-comparison-report.md`: add a note at the top marking it historical, and point to `GCS_FILESTORE_REPORT.md` §2.4 for the current status of each finding
+- [ ] `docs/gcs/multipart-fix.md` §4: change "specified, not yet implemented" to implemented once §7 lands (the quirk formerly in `GCS_INTEROP.md` now lives there)
+- [ ] `filestore-s3/SECURITY.md` S-4: downgrade and reword it to say token checks fail open only when no `TokenValidator` is bound, and that judo-platform forces `tokenRequired=true` (`DispatcherServiceActivator:264,280`). The report and handover copies of the gate list were removed in §9, so `SECURITY.md` is the only place to change
+- [x] `GCS_FILESTORE_REPORT.md` and `GCS_HANDOVER.md`: drop abort-on-failure from follow-ups, and update the test counts (obsolete: both files removed in §9)
+- [x] `s3-filestore-comparison-report.md`: add a note at the top marking it historical, and point to `docs/gcs/assessment.md` §4 (formerly `GCS_FILESTORE_REPORT.md` §2.4) for the current status of each finding
+
+## 9. Documentation reorganisation
+
+- [x] Create `docs/gcs/` with `README.md` (verdict, decisions, reading order), `assessment.md` (benefits, costs, readiness, comparison-report history), `setup.md` (provisioning, configuration, tests, production bucket, quirks) and `multipart-fix.md` (the single copy of the defect analysis, fix, failure handling and guarding tests)
+- [x] Remove `GCS_FILESTORE_REPORT.md`, `GCS_HANDOVER.md`, `filestore-s3/GCS_ASSESSMENT.md` and `filestore-s3/GCS_INTEROP.md`; branch status, test-run results and before-merge lists belong in the PR description and this file
+- [x] Keep `filestore-s3/SECURITY.md` and `filestore-s3/CONFIGURATION.md` in place (they cover all S3 providers); drop their GCS-duplicated sections in favour of links
+- [x] Update references in test sources, `.env.example`, `AGENTS.md` files and this change

@@ -35,7 +35,7 @@ The reactor configures surefire only; no failsafe plugin exists. Naming the clas
 
 ## Decision: the bucket is a precondition, not created by the fixture
 
-`MinioFixture.setupMinio()` creates its bucket with a bare `PUT` on the bucket path. That cannot work on GCS — bucket creation over the XML API requires an `x-goog-project-id` header the client does not send. `GcsFixture` therefore asserts the bucket is reachable and fails with an actionable message pointing at `GCS_INTEROP.md`.
+`MinioFixture.setupMinio()` creates its bucket with a bare `PUT` on the bucket path. That cannot work on GCS — bucket creation over the XML API requires an `x-goog-project-id` header the client does not send. `GcsFixture` therefore asserts the bucket is reachable and fails with an actionable message pointing at `docs/gcs/setup.md`.
 
 ## Decision: fix the ≥ 5 MB defect here, after explicitly widening scope
 

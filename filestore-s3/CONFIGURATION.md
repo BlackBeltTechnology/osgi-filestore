@@ -112,27 +112,15 @@ never expires**.
 
 **Size reconciliation:** `maxSize` (50 MB) and the backend's 5 MB multipart threshold are
 independent. Since the multipart fix, the S3 backend stores what the servlet accepts on GCS; before
-it, uploads between 5 and 50 MB were accepted and then failed. See `GCS_INTEROP.md` §6.1.
+it, uploads between 5 and 50 MB were accepted and then failed. See
+[docs/gcs/multipart-fix.md](../docs/gcs/multipart-fix.md).
 
 ---
 
 ## 5. Test configuration (`.env`)
 
-Only for the opt-in integration test; never read by the runtime. `DotEnv` looks up, in order:
-real environment variable → `filestore-s3/.env` (override the path with `FILESTORE_ENV_FILE`) →
-default. A missing file is not an error; the tests simply skip.
-
-```properties
-GCS_TEST_ENABLED=true
-GCS_BUCKET_NAME=my-filestore-test-bucket
-GCS_ENDPOINT=https://storage.googleapis.com
-GCS_ACCESS_KEY=GOOG1E...
-GCS_SECRET_KEY=...
-GCS_REGION=us-east-1
-GCS_PROTOCOL=gcsstore
-```
-
-`**/.env` is git-ignored. See `.env.example` and `GCS_INTEROP.md` for provisioning.
+Only for the opt-in GCS integration test; never read by the runtime. Keys, lookup order and how to
+run the tests: [docs/gcs/setup.md §4–5](../docs/gcs/setup.md#tests-filestore-s3env).
 
 ---
 
@@ -179,47 +167,18 @@ Keep protocols distinct per instance.
 
 Bucket creation over the XML API needs an `x-goog-project-id` header the client never sends, so
 `MinioFixture`'s create-on-demand trick cannot work on GCS. Provision the bucket first
-(`GCS_INTEROP.md` §2/§3).
+([docs/gcs/setup.md §2–3](../docs/gcs/setup.md#2-provisioning-with-the-gcloud-cli)).
 
 ---
 
-## 7. Worked example — GCS in judo-platform
+## 7. Worked example: GCS in judo-platform
 
-```bash
-# backend
-export JUDO_PLATFORM_FILESTORE=s3
-export JUDO_PLATFORM_S3_BUCKET=acme-prod-files
-export JUDO_PLATFORM_S3_ENDPOINT=https://storage.googleapis.com
-export JUDO_PLATFORM_S3_ACCESS_KEY="$(read-from-secret-manager gcs-hmac-id)"
-export JUDO_PLATFORM_S3_SECRET_KEY="$(read-from-secret-manager gcs-hmac-secret)"
-
-# security - none of these are safe by default
-export JUDO_PLATFORM_FILESTORE_TOKEN_EXPIRY=15          # minutes; 0 = never expires
-# set tokenRequired=true and an explicit CORS origin list on both servlet PIDs
-```
-
-Bucket side, once per environment:
-
-```bash
-gcloud storage buckets update gs://acme-prod-files --uniform-bucket-level-access
-# lifecycle: abort incomplete multipart uploads after 7 days. NOT a delete rule.
-cat > /tmp/lifecycle.json <<'EOF'
-{"lifecycle":{"rule":[{"action":{"type":"AbortIncompleteMultipartUpload"},"condition":{"age":7}}]}}
-EOF
-gcloud storage buckets update gs://acme-prod-files --lifecycle-file=/tmp/lifecycle.json
-```
-
-Verify after deploy — this is the check that catches traps 1–3:
-
-```bash
-curl -F "file=@hello.txt" -H "X-Token: $TOKEN" https://host/app/upload   # -> fileId
-curl -H "X-Token: $TOKEN" https://host/app/download?id=<fileId>          # -> bytes
-```
+The environment variables, the production bucket lifecycle rule and the post-deploy smoke check
+(which catches traps 1–3) are in [docs/gcs/setup.md §4 and §6](../docs/gcs/setup.md#6-production-bucket).
 
 ---
 
 ## References
 
-- [SECURITY.md](SECURITY.md) — what these settings mean for security, with a hardening checklist
-- [GCS_INTEROP.md](GCS_INTEROP.md) — provisioning (CLI + Console), quirks, the multipart defect
-- [GCS_ASSESSMENT.md](GCS_ASSESSMENT.md) — benefits and costs of GCS as the backend
+- [SECURITY.md](SECURITY.md): what these settings mean for security, with a hardening checklist
+- [docs/gcs/](../docs/gcs/README.md): GCS verdict, setup, the multipart fix

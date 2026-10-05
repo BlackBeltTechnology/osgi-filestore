@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Unlike {@link MinioFixture} this fixture starts no container and <strong>does not create the
  * bucket</strong>: creating a bucket over the Cloud Storage XML API requires an
  * {@code x-goog-project-id} header that {@code aws-lightweight-client-java} does not send. The
- * bucket is therefore a precondition — see {@code filestore-s3/GCS_INTEROP.md}.
+ * bucket is therefore a precondition — see {@code docs/gcs/setup.md}.
  *
  * <p>All values come from {@link DotEnv}, i.e. {@code filestore-s3/.env} or real environment
  * variables.
@@ -33,7 +33,7 @@ public class GcsFixture {
     public static final String DEFAULT_PROTOCOL = "gcsstore";
 
     private static final String SETUP_HINT =
-            "See filestore-s3/GCS_INTEROP.md for how to provision the bucket and HMAC key.";
+            "See docs/gcs/setup.md for how to provision the bucket and HMAC key.";
 
     private final String bucketName = DotEnv.get(KEY_BUCKET);
     private final String endpoint = DotEnv.get(KEY_ENDPOINT, DEFAULT_ENDPOINT);
