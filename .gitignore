@@ -64,7 +64,9 @@ wercker.env
 .agent
 
 # pi dashboard local knowledge-base state - machine-local, do not commit
-.pi/dashboard/
+# (knowledge_base.json config is shared and committed)
+.pi/dashboard/*
+!.pi/dashboard/knowledge_base.json
 
 # local credentials for opt-in integration tests - never commit
 **/.env
