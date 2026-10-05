@@ -82,23 +82,24 @@ the object's `Content-Length`, so it still returns the right value. This applies
 
 ## 4. Failure handling
 
-**Status: specified, not yet implemented** (OpenSpec `add-gcs-interop-integration-test`, tasks §7).
+**Status: implemented** (OpenSpec `add-gcs-interop-integration-test`, tasks §7).
 
 Owning the multipart flow also means owning its failure cases, which the library helper used to
-hide. Two gaps were found in review and are specified in the
+hide. Two gaps found in review are closed, as specified in the
 [`gcs-interop` spec](../../openspec/changes/add-gcs-interop-integration-test/specs/gcs-interop/spec.md)
 ("Multipart failure handling"):
 
 1. **A 200 response can carry an error.** Amazon documents that `CompleteMultipartUpload` may
-   answer HTTP 200 with an `<Error>` document. The current code decides success from the status
-   alone, so `put()` could return a `fileId` for an object that does not exist. Planned fix: read
-   the response with `responseAsXml()` and throw when the root element is `Error`.
-2. **No abort on failure.** Today a failed ≥ 5 MB upload leaves an incomplete multipart upload:
-   invisible as an object, but **billed as storage**. Planned fix: after a successful initiate, a
-   failure sends a best-effort `DELETE ?uploadId=…`. The original exception is always the one
-   thrown; an abort failure is attached with `addSuppressed`.
+   answer HTTP 200 with an `<Error>` document. Deciding success from the status alone would let
+   `put()` return a `fileId` for an object that does not exist. `putLargeFile` reads the response
+   with `responseAsXml()` and throws `IOException` when the root element is `Error`.
+2. **Abort on failure.** A failed ≥ 5 MB upload would otherwise leave an incomplete multipart
+   upload: invisible as an object, but **billed as storage**. After a successful initiate, any
+   failure in the part or complete steps sends a best-effort `DELETE ?uploadId=…`. The original
+   exception is always the one thrown; an abort failure is attached with `addSuppressed`. A failed
+   initiate sends no abort, because there is no `uploadId`.
 
-Either way, keep the `AbortIncompleteMultipartUpload` bucket lifecycle rule (7 days) as a safety
+Keep the `AbortIncompleteMultipartUpload` bucket lifecycle rule (7 days) as a safety
 net for what code cannot cover (JVM crash, network loss during the abort). See
 [setup.md §6](setup.md#6-production-bucket) and SECURITY.md S-14.
 
@@ -113,8 +114,14 @@ net for what code cannot cover (JVM crash, network loss during the abort). See
 | `GcsS3FileStoreServiceTest.putAndGetLargeFileViaMultipart` (+ 3-part variant) | real GCS bucket | 6 MB and 3-part round trips, byte-exact, metadata survives |
 | `S3FileStoreServiceTest.testPutAndGetLargeFileMultipart` | MinIO | pre-existing, unchanged: no regression on Amazon-compatible backends |
 
-Run against the **original** code, the wire test fails exactly the two `fixed*` tests by name and
-passes the others, so it targets these two defects and nothing else.
+| `S3FileStoreServiceMultipartWireTest.completeAnswering200WithErrorBodyFailsAndAborts` | none (fake transport) | 200 + `<Error>` on complete throws and sends the abort |
+| `S3FileStoreServiceMultipartWireTest.failedPartAbortsTheUploadAndPropagatesThePartFailure` | none (fake transport) | abort right after the failing part, original exception propagated |
+| `S3FileStoreServiceMultipartWireTest.failingAbortIsSuppressedAndDoesNotMaskThePartFailure` | none (fake transport) | a failing abort is attached as suppressed |
+| `S3FileStoreServiceMultipartWireTest.failedInitiateSendsNoAbort` | none (fake transport) | no `uploadId`, no abort |
+
+Run against the code before each fix, the corresponding wire tests fail by name: the two `fixed*`
+tests against the original library-based code, and three of the four failure-handling tests before
+§4 (`failedInitiateSendsNoAbort` already held).
 
 ---
 

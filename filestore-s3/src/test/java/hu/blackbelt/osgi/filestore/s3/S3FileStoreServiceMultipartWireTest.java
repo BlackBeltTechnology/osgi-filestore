@@ -60,6 +60,9 @@ import static org.mockito.Mockito.when;
  *   <li>parts are numbered from 1, ascending, each exactly {@code MULTIPART_THRESHOLD} bytes except the
  *       last, and their concatenation is the original payload;</li>
  *   <li>a failed part stops the upload before the complete request is sent;</li>
+ *   <li>a complete answered with HTTP 200 and an {@code <Error>} body fails the upload;</li>
+ *   <li>any failure after initiate sends a best-effort abort ({@code DELETE ?uploadId=…}) that never
+ *       masks the original exception;</li>
  *   <li>payloads up to and including the threshold never enter the multipart path.</li>
  * </ul>
  */
@@ -99,6 +102,10 @@ public class S3FileStoreServiceMultipartWireTest {
             return "POST".equals(method) && query().contains("uploadId=") && !query().contains("uploads");
         }
 
+        boolean isAbort() {
+            return "DELETE".equals(method) && query().contains("uploadId=");
+        }
+
         boolean isSinglePut() {
             return "PUT".equals(method) && query().isEmpty();
         }
@@ -117,6 +124,9 @@ public class S3FileStoreServiceMultipartWireTest {
     static final class RecordingHttpClient implements HttpClient {
         final List<Recorded> requests = new ArrayList<>();
         int failPartNumber = -1;
+        boolean failInitiate;
+        boolean completeAnswersErrorWith200;
+        boolean failAbort;
 
         @Override
         public ResponseInputStream request(URL url, String method, Map<String, String> headers,
@@ -124,6 +134,9 @@ public class S3FileStoreServiceMultipartWireTest {
             Recorded r = new Recorded(method, url, headers, body);
             requests.add(r);
             if (r.isInitiate()) {
+                if (failInitiate) {
+                    return response(500, "<Error><Code>InternalError</Code></Error>", Collections.emptyMap());
+                }
                 return ok("<InitiateMultipartUploadResult><UploadId>" + UPLOAD_ID + "</UploadId>"
                         + "</InitiateMultipartUploadResult>", Collections.emptyMap());
             }
@@ -134,7 +147,17 @@ public class S3FileStoreServiceMultipartWireTest {
                 return ok("", Map.of("ETag", List.of("\"etag-" + r.partNumber() + "\"")));
             }
             if (r.isComplete()) {
+                if (completeAnswersErrorWith200) {
+                    return ok("<Error><Code>InternalError</Code><Message>assembly failed</Message></Error>",
+                            Collections.emptyMap());
+                }
                 return ok("<CompleteMultipartUploadResult/>", Collections.emptyMap());
+            }
+            if (r.isAbort()) {
+                if (failAbort) {
+                    return response(500, "<Error><Code>InternalError</Code></Error>", Collections.emptyMap());
+                }
+                return response(204, "", Collections.emptyMap());
             }
             return ok("", Collections.emptyMap());
         }
@@ -359,6 +382,65 @@ public class S3FileStoreServiceMultipartWireTest {
         assertThat(thrown.getMessage(), containsString("403"));
         assertThat("a complete request after a failed part would assemble a truncated object",
                 http.requests.stream().filter(Recorded::isComplete).collect(Collectors.toList()), empty());
+    }
+
+    /**
+     * Amazon documents that {@code CompleteMultipartUpload} may answer HTTP 200 with an {@code <Error>}
+     * document. Deciding success from the status alone would hand back a fileId for an object that
+     * does not exist.
+     */
+    @Test
+    void completeAnswering200WithErrorBodyFailsAndAborts() {
+        http.completeAnswersErrorWith200 = true;
+
+        Exception thrown = assertThrows(Exception.class, () -> put(new ByteArrayInputStream(payload(6 * MB))));
+
+        assertThat(thrown.getMessage(), containsString("InternalError"));
+        Recorded abort = only(Recorded::isAbort, "abort");
+        assertThat(abort.query(), containsString("uploadId=" + UPLOAD_ID));
+    }
+
+    @Test
+    void failedPartAbortsTheUploadAndPropagatesThePartFailure() {
+        http.failPartNumber = 2;
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> put(new ByteArrayInputStream(payload(6 * MB))));
+
+        assertThat(thrown.getMessage(), containsString("403"));
+        Recorded abort = only(Recorded::isAbort, "abort");
+        assertThat(abort.query(), containsString("uploadId=" + UPLOAD_ID));
+        int failedPartAt = -1;
+        for (int i = 0; i < http.requests.size(); i++) {
+            if (http.requests.get(i).isPart() && http.requests.get(i).partNumber() == 2) {
+                failedPartAt = i;
+            }
+        }
+        assertThat("abort must follow the failing part", indexOf(Recorded::isAbort), equalTo(failedPartAt + 1));
+    }
+
+    @Test
+    void failingAbortIsSuppressedAndDoesNotMaskThePartFailure() {
+        http.failPartNumber = 2;
+        http.failAbort = true;
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> put(new ByteArrayInputStream(payload(6 * MB))));
+
+        assertThat(thrown.getMessage(), containsString("403"));
+        assertThat(thrown.getSuppressed().length, equalTo(1));
+        assertThat(thrown.getSuppressed()[0].getMessage(), containsString("500"));
+        only(Recorded::isAbort, "abort");
+    }
+
+    @Test
+    void failedInitiateSendsNoAbort() {
+        http.failInitiate = true;
+
+        assertThrows(RuntimeException.class, () -> put(new ByteArrayInputStream(payload(6 * MB))));
+
+        assertThat("without an uploadId there is nothing to abort",
+                http.requests.stream().filter(Recorded::isAbort).collect(Collectors.toList()), empty());
     }
 
     // ── threshold ────────────────────────────────────────────────────────

@@ -86,19 +86,19 @@ One production change only: `S3FileStoreService.putLargeFile` (see section 3b). 
 
 ## 7. Multipart failure handling (added after review)
 
-- [ ] Add wire tests to `S3FileStoreServiceMultipartWireTest` for the four "Multipart failure handling" scenarios (200 + `<Error>` on complete, part failure aborts, failing abort is suppressed, no abort when initiate fails)
-- [ ] Run them against the current code and confirm they fail by name (TDD red)
-- [ ] In `putLargeFile`, read the complete response with `responseAsXml()` and throw when its root element is `Error`
-- [ ] In `putLargeFile`, wrap the part and complete steps in `try`/`catch`: on failure send `DELETE ?uploadId=…`, attach any abort failure with `addSuppressed`, and rethrow the original exception
-- [ ] Run `mvn test -pl filestore-s3` and confirm the wire suite is fully green and the GCS suite is still green
-- [ ] Confirm the `src/main` diff is still confined to `S3FileStoreService.java`
+- [x] Add wire tests to `S3FileStoreServiceMultipartWireTest` for the four "Multipart failure handling" scenarios (200 + `<Error>` on complete, part failure aborts, failing abort is suppressed, no abort when initiate fails)
+- [x] Run them against the current code and confirm they fail by name (TDD red): 3 of 4 failed; `failedInitiateSendsNoAbort` already held, since the old code sent no abort at all
+- [x] In `putLargeFile`, read the complete response with `responseAsXml()` and throw when its root element is `Error`
+- [x] In `putLargeFile`, wrap the part and complete steps in `try`/`catch`: on failure send `DELETE ?uploadId=…`, attach any abort failure with `addSuppressed`, and rethrow the original exception
+- [x] Run `mvn test -pl filestore-s3` and confirm the wire suite is fully green and the GCS suite is still green: 35 tests, 0 failures: wire 13, GCS 12 (real bucket), MinIO 10. `minio/minio` is gone from Docker Hub and the quay.io copy is private, so `MinioFixture` now uses `cgr.dev/chainguard/minio:latest` via `asCompatibleSubstituteFor("minio/minio")` (test code only)
+- [x] Confirm the `src/main` diff is still confined to `S3FileStoreService.java`
 
 ## 8. Documentation follow-up
 
 - [x] `filestore-s3/GCS_ASSESSMENT.md`: fix the stale pre-fix wording (the subtitle "the current blocker", "it does not work today" on line 4, and the "Impact in judo-platform terms" paragraph claiming a < 5 MB limit)
-- [ ] `filestore-s3/SECURITY.md`: update finding S-14 (unaborted multipart uploads). The code now aborts on failure, and the lifecycle rule stays as a safety net.
-- [ ] `docs/gcs/multipart-fix.md` §4: change "specified, not yet implemented" to implemented once §7 lands (the quirk formerly in `GCS_INTEROP.md` now lives there)
-- [ ] `filestore-s3/SECURITY.md` S-4: downgrade and reword it to say token checks fail open only when no `TokenValidator` is bound, and that judo-platform forces `tokenRequired=true` (`DispatcherServiceActivator:264,280`). The report and handover copies of the gate list were removed in §9, so `SECURITY.md` is the only place to change
+- [x] `filestore-s3/SECURITY.md`: update finding S-14 (unaborted multipart uploads). The code now aborts on failure, and the lifecycle rule stays as a safety net.
+- [x] `docs/gcs/multipart-fix.md` §4: change "specified, not yet implemented" to implemented (the quirk formerly in `GCS_INTEROP.md` now lives there)
+- [x] `filestore-s3/SECURITY.md` S-4: downgrade and reword it to say token checks fail open only when no `TokenValidator` is bound, and that judo-platform forces `tokenRequired=true` (`DispatcherServiceActivator:264,280`, verified in judo-platform). The report and handover copies of the gate list were removed in §9, so `SECURITY.md` is the only place to change
 - [x] `GCS_FILESTORE_REPORT.md` and `GCS_HANDOVER.md`: drop abort-on-failure from follow-ups, and update the test counts (obsolete: both files removed in §9)
 - [x] `s3-filestore-comparison-report.md`: add a note at the top marking it historical, and point to `docs/gcs/assessment.md` §4 (formerly `GCS_FILESTORE_REPORT.md` §2.4) for the current status of each finding
 

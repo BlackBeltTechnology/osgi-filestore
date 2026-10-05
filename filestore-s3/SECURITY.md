@@ -6,9 +6,10 @@ Scope: the whole request path a stored file travels — browser → `UploadServl
 Every default quoted here was read out of the source; file and line are given so it can be checked.
 Where something is **not** verified, it says so rather than guessing.
 
-> **The two defaults most likely to surprise you:** token enforcement is **off**
-> (`tokenRequired() default false`), and CORS is `Access-Control-Allow-Origin: *` **together with**
-> `Allow-Credentials: true`. Both servlets. See S-4 and S-8.
+> **The defaults most likely to surprise you:** CORS is `Access-Control-Allow-Origin: *`
+> **together with** `Allow-Credentials: true`, and tokens never expire. Both servlets. See S-8 and
+> S-5. Token enforcement (`tokenRequired() default false`, S-4) only fails open when no
+> `TokenValidator` is bound; judo-platform forces it on.
 
 ---
 
@@ -71,7 +72,7 @@ notice.
 - Always `https://storage.googleapis.com` for GCS; plain `http` only for a local MinIO container.
 - Consider asserting the scheme in your deployment smoke check.
 
-### S-4 · Token enforcement is **off by default** — **High**
+### S-4 · Token enforcement is off by default — **Medium** (outside judo-platform)
 
 `tokenRequired() default false` on **both** servlets (`UploadServlet.java:82`,
 `DownloadServlet.java:71`). The logic is:
@@ -81,12 +82,16 @@ if (tokenRequired && tokenValidator == null) { /* fail */ }
 if (tokenValidator != null) { /* validate X-Token */ }
 ```
 
-So: if **no** `TokenValidator` service is registered *and* `tokenRequired` is false, upload and
-download are **completely unauthenticated** — anyone who can reach the endpoint can store and
-retrieve files. A validator being present does cause validation even when not required, which is the
-saving grace in judo-platform, where the security feature is normally installed.
+So the checks fail open only when **no** `TokenValidator` service is bound *and* `tokenRequired`
+is false: then upload and download are unauthenticated. When a validator is bound, tokens are
+validated even if not required.
 
-- Set `tokenRequired=true` explicitly in production. Do not rely on the validator merely existing.
+judo-platform is not affected: `DispatcherServiceActivator` sets `tokenRequired=true` on both the
+upload and the download servlet PID (judo-platform `judo-services-dispatcher-osgi`, lines 264 and
+280). The risk applies to standalone Karaf installs that configure the servlets by hand.
+
+- Outside judo-platform, set `tokenRequired=true` explicitly. Do not rely on the validator merely
+  being installed.
 
 ### S-5 · Tokens never expire by default — **High** (with S-4)
 
@@ -175,13 +180,16 @@ cannot be subdivided per tenant/application by IAM condition on object prefix.
 
 - **One bucket per application per environment.** Do not share a bucket between deployments.
 
-### S-14 · Interrupted multipart uploads are never aborted — **Low** (cost, not confidentiality)
+### S-14 · Interrupted multipart uploads can be left behind — **Low** (cost, not confidentiality)
 
-`putLargeFile` sends no `AbortMultipartUpload` when a part fails, so a failed ≥ 5 MB upload leaves
-an incomplete multipart upload: invisible as an object, but **billed as storage**, indefinitely.
+`putLargeFile` sends a best-effort `AbortMultipartUpload` (`DELETE ?uploadId=…`) when a part or
+the complete step fails. Code cannot cover every case: a JVM crash, a lost connection during the
+abort, or a failing abort leaves an incomplete multipart upload, invisible as an object but
+**billed as storage** until removed. See
+[docs/gcs/multipart-fix.md §4](../docs/gcs/multipart-fix.md#4-failure-handling).
 
-- Set an `AbortIncompleteMultipartUpload` lifecycle rule (age 7 days) on every bucket used with this
-  backend. Do **not** copy the test bucket's `Delete / age 1 day` rule — that deletes live files.
+- Keep an `AbortIncompleteMultipartUpload` lifecycle rule (age 7 days) on every bucket used with this
+  backend as a safety net. Do **not** copy the test bucket's `Delete / age 1 day` rule — that deletes live files.
 
 ### S-15 · No end-to-end integrity check — **Low**
 
@@ -209,7 +217,7 @@ TLS alone. The AWS SDK would add CRC32. Low probability, non-zero.
 
 Go-live gates:
 
-- [ ] `tokenRequired=true` on both servlets (S-4)
+- [ ] `tokenRequired=true` on both servlets; already forced by judo-platform (S-4)
 - [ ] `expirationTime` > 0, set to minutes not hours (S-5)
 - [ ] Explicit CORS origin list; never `*` with `allowCredentials=true` (S-8)
 - [ ] Secret injected from a secret manager; jasypt verified if used (S-2)

@@ -45,7 +45,7 @@ Ordered by how much they should influence the decision.
 | **One bucket per app/environment** | Medium | Objects are written flat with no configurable key prefix, so a bucket cannot be shared or split by IAM. SECURITY.md S-13. |
 | **Library maturity** | Medium | `aws-lightweight-client-java` has a single maintainer. Three defects were found in it (two fixed on our side, the presigned-URL one left unfixed). Mitigation: pinned version and wire tests. |
 | **Downloads go through Karaf** | Medium | `getAccessUrl()` returns an OSGi-internal URL, so download bandwidth and CPU land on `DownloadServlet`. Presigned URLs would need an API and security-model decision. |
-| **Abandoned multipart uploads are billed** | Medium (cost) | Until abort-on-failure lands ([multipart-fix.md §4](multipart-fix.md#4-failure-handling)), a failed ≥ 5 MB upload stays billed. Keep the `AbortIncompleteMultipartUpload` lifecycle rule either way. |
+| **Abandoned multipart uploads are billed** | Low (cost) | Failed ≥ 5 MB uploads are aborted in code ([multipart-fix.md §4](multipart-fix.md#4-failure-handling)), but a crash or a failed abort can still leave one behind. Keep the `AbortIncompleteMultipartUpload` lifecycle rule as a safety net. |
 | **Egress and operation costs** | Product | Google charges for egress and per operation; Nearline/Coldline have minimum storage durations. Choose the class to match access patterns. |
 | **Bucket is not auto-created** | Low | Provision it in advance ([setup.md §7.1](setup.md#71-the-bucket-cannot-be-created-by-the-client)). |
 | **No end-to-end checksums** | Low | Relies on TLS only; the AWS SDK would add CRC32. SECURITY.md S-15. |

@@ -17,6 +17,7 @@ import com.github.davidmoten.aws.lw.client.HttpMethod;
 import com.github.davidmoten.aws.lw.client.Response;
 import com.github.davidmoten.aws.lw.client.ResponseInputStream;
 import com.github.davidmoten.aws.lw.client.ServiceException;
+import com.github.davidmoten.aws.lw.client.xml.XmlElement;
 import com.github.davidmoten.aws.lw.client.xml.builder.Xml;
 
 import java.io.ByteArrayInputStream;
@@ -193,27 +194,51 @@ public class S3FileStoreService implements FileStoreService {
                 .requestBody(new byte[0]) // empty, not absent: this is what emits Content-Length: 0
                 .responseAsXml().content("UploadId");
 
-        Xml complete = Xml.create("CompleteMultipartUpload");
-        byte[] buffer = new byte[MULTIPART_THRESHOLD];
-        int partNumber = 0;
-        int read;
-        while ((read = readFully(combinedStream, buffer)) > 0) {
-            partNumber++;
-            String eTag = s3Client.path(bucketName, fileId)
-                    .query("partNumber", String.valueOf(partNumber)).query("uploadId", uploadId)
-                    .method(HttpMethod.PUT)
-                    .requestBody(read == buffer.length ? buffer : Arrays.copyOf(buffer, read))
-                    .responseExpectStatusCode(200)
-                    .firstHeader("ETag").orElseThrow(() -> new IOException("Part upload returned no ETag"));
-            complete = complete.element("Part")
-                    .element("ETag").content(eTag).up()
-                    .element("PartNumber").content(String.valueOf(partNumber)).up()
-                    .up();
-        }
+        try {
+            Xml complete = Xml.create("CompleteMultipartUpload");
+            byte[] buffer = new byte[MULTIPART_THRESHOLD];
+            int partNumber = 0;
+            int read;
+            while ((read = readFully(combinedStream, buffer)) > 0) {
+                partNumber++;
+                String eTag = s3Client.path(bucketName, fileId)
+                        .query("partNumber", String.valueOf(partNumber)).query("uploadId", uploadId)
+                        .method(HttpMethod.PUT)
+                        .requestBody(read == buffer.length ? buffer : Arrays.copyOf(buffer, read))
+                        .responseExpectStatusCode(200)
+                        .firstHeader("ETag").orElseThrow(() -> new IOException("Part upload returned no ETag"));
+                complete = complete.element("Part")
+                        .element("ETag").content(eTag).up()
+                        .element("PartNumber").content(String.valueOf(partNumber)).up()
+                        .up();
+            }
 
-        s3Client.path(bucketName, fileId).query("uploadId", uploadId).method(HttpMethod.POST)
-                .requestBody(complete.toString())
-                .execute();
+            // CompleteMultipartUpload may answer 200 with an <Error> document, so the status alone
+            // does not prove the object exists.
+            XmlElement result = s3Client.path(bucketName, fileId).query("uploadId", uploadId)
+                    .method(HttpMethod.POST)
+                    .requestBody(complete.toString())
+                    .responseAsXml();
+            if ("Error".equals(result.name())) {
+                StringBuilder detail = new StringBuilder();
+                for (XmlElement child : result.children()) {
+                    detail.append(' ').append(child.name()).append('=').append(child.content());
+                }
+                throw new IOException("CompleteMultipartUpload answered 200 with an error:" + detail);
+            }
+        } catch (IOException | RuntimeException e) {
+            abortQuietly(fileId, uploadId, e);
+            throw e;
+        }
+    }
+
+    /** Best effort: an abort failure is attached to {@code cause}, never replaces it. */
+    private void abortQuietly(String fileId, String uploadId, Exception cause) {
+        try {
+            s3Client.path(bucketName, fileId).query("uploadId", uploadId).method(HttpMethod.DELETE).execute();
+        } catch (RuntimeException abortFailure) {
+            cause.addSuppressed(abortFailure);
+        }
     }
 
     /** Fills {@code buffer} unless the stream ends first. @return bytes read, 0 at end of stream. */
