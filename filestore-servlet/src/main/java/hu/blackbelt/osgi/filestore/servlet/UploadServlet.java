@@ -24,6 +24,7 @@ import hu.blackbelt.osgi.filestore.security.api.*;
 import hu.blackbelt.osgi.filestore.api.FileStoreService;
 import hu.blackbelt.osgi.filestore.servlet.exceptions.*;
 import hu.blackbelt.osgi.filestore.servlet.utils.CorsProcessor;
+import hu.blackbelt.osgi.filestore.servlet.utils.UnsafeConfigurationWarnings;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.annotations.*;
@@ -144,6 +145,7 @@ public class UploadServlet extends HttpServlet implements Servlet {
                 .build();
         servletPath = config.servletPath();
         tokenRequired = config.tokenRequired();
+        UnsafeConfigurationWarnings.check(servletPath, tokenRequired, config.cors_allowOrigin(), config.cors_allowCredentials());
 
         log.info(String.format(MSG_INIT_MAX_SIZE_D_UPLOAD_DELAY_D_CORS_REGEX_S, maxSize, uploadDelay, corsProcessor.getAllowOrigins()));
         httpService.registerServlet(servletPath, this, getInitParams(servletPath), null);
