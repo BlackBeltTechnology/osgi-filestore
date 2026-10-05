@@ -82,11 +82,11 @@ the object's `Content-Length`, so it still returns the right value. This applies
 
 ## 4. Failure handling
 
-**Status: implemented** (OpenSpec `add-gcs-interop-integration-test`, tasks §7).
+**Status: implemented** (OpenSpec `add-gcs-interop-integration-test`, archived).
 
 Owning the multipart flow also means owning its failure cases, which the library helper used to
 hide. Two gaps found in review are closed, as specified in the
-[`gcs-interop` spec](../../openspec/changes/add-gcs-interop-integration-test/specs/gcs-interop/spec.md)
+[`gcs-interop` spec](../../openspec/specs/gcs-interop/spec.md)
 ("Multipart failure handling"):
 
 1. **A 200 response can carry an error.** Amazon documents that `CompleteMultipartUpload` may

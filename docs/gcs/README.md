@@ -40,6 +40,8 @@ comparison against AWS S3 / filesystem / RDBMS, migration, backup/DR, monitoring
 | [multipart-fix.md](multipart-fix.md) | the ≥ 5 MB defect, the fix, failure handling, guarding tests | reference |
 | [CONFIGURATION.md](../../filestore-s3/CONFIGURATION.md) | every property and the silent-failure traps (all S3 providers) | reference |
 
-Specs and design decisions: OpenSpec changes
-[`add-gcs-interop-integration-test`](../../openspec/changes/add-gcs-interop-integration-test/) and
+Specs and design decisions: the [`gcs-interop` spec](../../openspec/specs/gcs-interop/spec.md), the
+archived change
+[`add-gcs-interop-integration-test`](../../openspec/changes/archive/2026-10-05-add-gcs-interop-integration-test/),
+and the open change
 [`harden-servlet-defaults`](../../openspec/changes/harden-servlet-defaults/).
