@@ -38,3 +38,9 @@
 - [ ] 7.2 Update `filestore-s3/SECURITY.md` S-5, S-8 and the hardening checklist, and the defaults table in `filestore-s3/CONFIGURATION.md`, to match the new defaults
 - [ ] 7.3 Write release notes covering: the expiry default (24 h, the effect on forms open longer than that, `expirationTime=0` to opt out), the wildcard CORS change (an explicit origin list for credentialed clients), `allowedClockSkew`, the rolling-upgrade note, and rollback by configuration
 - [ ] 7.4 Bump `revision` in the root `pom.xml` to the next minor version, and verify the build picks it up
+
+## 8. judo-platform template
+
+- [x] 8.1 Change the dispatcher config template default to `filestoreTokenExpiry = ${filestoreTokenExpiry!"1440"}` (judo-platform, `judo-platform-config-templates`, branch `feature/JNG-6418_FilestoreTokenExpiryDefault`). Verified by rendering the template with FreeMarker: unset → `1440`, `0` → `0`, `60` → `60`; `develop` renders `0`
+- [ ] 8.2 Release the judo-platform template change together with (not before) the filestore minor version, so `1440` reaches a validator that applies `allowedClockSkew`
+- [ ] 8.3 In the release notes, name the variables: `JUDO_PLATFORM_FILESTORE_TOKEN_EXPIRY` (expiry, `0` = never) and `JUDO_PLATFORM_CORS_ALLOW_ORIGIN` (explicit origin list for credentialed clients, silences the CORS WARN)

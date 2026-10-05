@@ -113,8 +113,8 @@ export JUDO_PLATFORM_S3_BUCKET=acme-prod-files
 export JUDO_PLATFORM_S3_ENDPOINT=https://storage.googleapis.com
 export JUDO_PLATFORM_S3_ACCESS_KEY="$(read-from-secret-manager gcs-hmac-id)"
 export JUDO_PLATFORM_S3_SECRET_KEY="$(read-from-secret-manager gcs-hmac-secret)"
-export JUDO_PLATFORM_FILESTORE_TOKEN_EXPIRY=15                 # minutes; 0 = never expires
-# plus an explicit CORS origin list on both servlet PIDs (SECURITY.md S-8)
+export JUDO_PLATFORM_FILESTORE_TOKEN_EXPIRY=1440               # minutes; 0 = never expires
+export JUDO_PLATFORM_CORS_ALLOW_ORIGIN=https://app.example.com # explicit origin list (SECURITY.md S-8)
 ```
 
 ### Standalone Karaf (`.cfg` file)

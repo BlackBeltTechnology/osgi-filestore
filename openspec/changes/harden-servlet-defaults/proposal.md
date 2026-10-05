@@ -1,6 +1,6 @@
 ## Why
 
-Two configuration defaults in the filestore fail open. When an install does not set them, which is the normal case for judo-platform because unset values are dropped before ConfigAdmin and the component defaults apply:
+Two configuration defaults in the filestore fail open. When an install does not set them, which is the normal case for judo-platform, the fail-open value applies. In judo-platform it comes from the dispatcher config template (`filestoreTokenExpiry!"0"`, `corsAllowOrigin!"*"`, `corsAllowCredentials!"true"`), which mirrors the component defaults here:
 
 1. **Tokens never expire** (`expirationTime = 0`). A leaked upload result or download token stays valid forever.
 2. **CORS accepts any site with credentials.** With the default `cors.allowOrigin = "*"` and `cors.allowCredentials = true`, `CorsProcessor` does not send a literal `*`. It echoes the caller's `Origin` back together with `Access-Control-Allow-Credentials: true`, which browsers treat as "this specific site may make credentialed requests".
@@ -37,6 +37,7 @@ None.
 
 - **Code:** `filestore-servlet` (`CorsProcessor`, the `UploadServlet` and `DownloadServlet` config defaults and activation), `filestore-security` (`TokenServiceConfig`, `DefaultTokenIssuer`, `DefaultTokenValidator`), `filestore-s3` (`S3FileStoreService.activate`).
 - **judo-platform / judo-runtime-core:**
+  - **judo-platform config template:** the dispatcher template default changes from `${filestoreTokenExpiry!"0"}` to `${filestoreTokenExpiry!"1440"}`, otherwise the new expiry default never reaches platform apps (the template always passes an explicit value). Operators override it with `JUDO_PLATFORM_FILESTORE_TOKEN_EXPIRY` (`0` = never expires). No new environment variable is introduced. CORS is controlled by the existing `JUDO_PLATFORM_CORS_ALLOW_ORIGIN` / `JUDO_PLATFORM_CORS_ALLOW_CREDENTIALS`.
   - `RequestConverter` validates the download token on every save of an entity with a binary attribute. `ResponseConverter` issues a new token on every read.
   - The token travels only between server and browser. The database stores `FileType` JSON (`id`, `fileName`, `size`, `mimeType`) and no token, so **no data migration** is needed.
   - Visible effect: a form or tab kept open for more than 24 h fails to save with `ERROR_INVALID_FILE_TOKEN`, and the user has to reload.

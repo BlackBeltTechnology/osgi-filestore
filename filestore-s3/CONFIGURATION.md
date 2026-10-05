@@ -60,8 +60,11 @@ Notes:
   `<modelName> + "store"`.
 - No project ID, session token or path-style flag is needed for object operations. (A project ID is
   only needed to *create* a bucket, which this code never does.)
-- Related dispatcher variables: `JUDO_PLATFORM_FILESTORE_TOKEN_EXPIRY` (see SECURITY.md S-5) and the
-  `filestore.cors.*` family (S-8). `filestoreDirectory` applies to the **filesystem** backend only.
+- Related dispatcher variables: `JUDO_PLATFORM_FILESTORE_TOKEN_EXPIRY` (minutes, `0` = never; see
+  SECURITY.md S-5) and `JUDO_PLATFORM_CORS_ALLOW_ORIGIN` / `JUDO_PLATFORM_CORS_ALLOW_CREDENTIALS`
+  (S-8), which the dispatcher template maps to `filestore.cors.*`. Unset, the template supplies its
+  own defaults (token expiry, `*`, `true`), not the component's. `filestoreDirectory`
+  applies to the **filesystem** backend only.
 
 > `fileStoreType`, `fileStoreProtocol`, `fileStoreTable` — seen in `osgi-filestore`'s own
 > config-templates — belong to a **different** mechanism that only covers filesystem/rdbms, and

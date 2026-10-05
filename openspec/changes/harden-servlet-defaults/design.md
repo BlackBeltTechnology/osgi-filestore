@@ -2,7 +2,7 @@
 
 See proposal.md (Why) for the motivation. The constraints that shape the approach:
 
-- **Configuration path.** judo-platform builds every filestore PID in `DispatcherServiceActivator.getAdditionalProperties`, and `TrackerBasedComponentActivator` (lines 166-167) drops `null` values before `configuration.update`. An unset environment variable therefore means "use the annotation default in this repo". So changing a default here changes behavior for every judo-platform app that does not set the value.
+- **Configuration path.** judo-platform builds every filestore PID in `DispatcherServiceActivator.getAdditionalProperties`, and `TrackerBasedComponentActivator` (lines 166-167) drops `null` values before `configuration.update`. However, the dispatcher's own configuration comes from the config template `judo-platform-config-templates/.../hu.blackbelt.judo.services.dispatcher.osgi.DispatcherServiceActivator.template`, which fills in a value whenever the `JUDO_PLATFORM_*` variable is unset: `filestoreTokenExpiry = ${filestoreTokenExpiry!"0"}`, `filestore.cors.allowOrigin=${corsAllowOrigin!"*"}`, `filestore.cors.allowCredentials=${corsAllowCredentials!"true"}`. These values are never `null`, so for judo-platform the **template** default wins over the annotation default in this repo. A changed annotation default reaches judo-platform only if the template default changes with it.
 - **Token round trip in judo.** `ResponseConverter` (lines 116-135) issues a new download token for each binary attribute on every read. `RequestConverter.convertBinaryValue` (line 362) validates any `String` binary value on every save, then keeps only the claims as `FileType`. The database stores `FileType` JSON via `FileTypeFormatter` and no token. So the useful lifetime of a token is "how long a form or tab stays open", not "how long a file is stored".
 - **Shared configuration.** `DefaultTokenIssuer` and `DefaultTokenValidator` share `TokenServiceConfig`, and judo-platform feeds both from the same `filestoreTokenExpiry` property. They stay in sync as long as both pick up the same default.
 - **Test coverage.** There are no unit tests in `filestore-servlet` or `filestore-security`. Only the Karaf `filestore-itest` covers them, and it configures an explicit CORS origin, so it never exercises the wildcard path.
@@ -67,7 +67,7 @@ Annotation default values and new metatype attributes are binary compatible, and
 ## Migration Plan
 
 1. Release as a minor version. Release notes cover both default changes, how to keep the old behavior (`expirationTime=0`, an explicit origin list) and the 24 h form-session effect.
-2. judo-platform picks up the new version with no code change. Unset properties get the new defaults automatically.
+2. judo-platform needs one template change for the expiry default: `filestoreTokenExpiry = ${filestoreTokenExpiry!"1440"}` in the dispatcher template (branch `feature/JNG-6418_FilestoreTokenExpiryDefault` in judo-platform). Without it, platform apps keep `0` and log the non-expiring-token WARN. The CORS wildcard rule needs no platform change: it lives in `CorsProcessor` and applies to the template's `*` default. `allowedClockSkew` is not passed by the dispatcher, so platform apps always get the 60 s annotation default; making it tunable would need a template line and a dispatcher mapping (out of scope).
 3. **Rollback** is configuration only, by setting `expirationTime=0` and/or an explicit `cors.allowOrigin`. Downgrading the bundle is also safe, because nothing is persisted.
 
 ## Open Questions
