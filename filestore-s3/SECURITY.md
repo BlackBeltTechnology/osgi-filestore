@@ -6,10 +6,10 @@ Scope: the whole request path a stored file travels — browser → `UploadServl
 Every default quoted here was read out of the source; file and line are given so it can be checked.
 Where something is **not** verified, it says so rather than guessing.
 
-> **The defaults most likely to surprise you:** CORS is `Access-Control-Allow-Origin: *`
-> **together with** `Allow-Credentials: true`, and tokens never expire. Both servlets. See S-8 and
-> S-5. Token enforcement (`tokenRequired() default false`, S-4) only fails open when no
-> `TokenValidator` is bound; judo-platform forces it on.
+> **The defaults most likely to surprise you:** CORS is `Access-Control-Allow-Origin: *` on both
+> servlets (S-8), and token enforcement (`tokenRequired() default false`, S-4) only fails open when
+> no `TokenValidator` is bound; judo-platform forces it on. Since the servlet-hardening change a
+> wildcard origin no longer grants credentials, and tokens expire after 24 h by default (S-5).
 
 ---
 
@@ -93,14 +93,20 @@ upload and the download servlet PID (judo-platform `judo-services-dispatcher-osg
 - Outside judo-platform, set `tokenRequired=true` explicitly. Do not rely on the validator merely
   being installed.
 
-### S-5 · Tokens never expire by default — **High** (with S-4)
+### S-5 · Token lifetime — **Medium** (was High before the hardening change)
 
-`expirationTime() default 0` = "not expiring" (`TokenServiceConfig.java:39-40`). The issuer only
-calls `setExpirationTimeMinutesInTheFuture` and the validator only calls `setRequireExpirationTime`
-when the value is `> 0`. A leaked download token is therefore valid **forever**, and there is no
-revocation mechanism.
+`expirationTime() default 1440` minutes = 24 h (`TokenServiceConfig.java`). The issuer calls
+`setExpirationTimeMinutesInTheFuture` and the validator calls `setRequireExpirationTime` whenever
+the value is `> 0`, so a token issued with the defaults expires and a token **without** an `exp`
+claim is rejected. There is still no revocation mechanism, so a leaked token is usable until it
+expires.
 
-- Set `filestoreTokenExpiry` / `expirationTime` to the smallest workable value (minutes).
+An explicit `expirationTime=0` keeps the old "never expires" behaviour and logs a WARN on
+activation. The validator tolerates a clock difference of `allowedClockSkew` seconds (default
+`60`) between the issuing and the validating node.
+
+- Set `filestoreTokenExpiry` / `expirationTime` to the smallest workable value (minutes); on
+  judo-platform the variable is `JUDO_PLATFORM_FILESTORE_TOKEN_EXPIRY`.
 
 ### S-6 · Ephemeral signing keys by default — **Medium**
 
@@ -124,18 +130,22 @@ and MinIO alike** (it signs an empty `x-amz-content-sha256` no browser sends). I
 ever added, note they **bypass** `DownloadServlet` — and with it the JWT check, CORS handling and
 `Content-Disposition` — and move download audit from the application to bucket logs.
 
-### S-8 · CORS: wildcard origin **with** credentials — **High**
+### S-8 · CORS: wildcard origin **with** credentials — **Medium** (was High before the hardening change)
 
-Defaults on both servlets: `cors_allowOrigin() default "*"` and
-`cors_allowCredentials() default true` (`UploadServlet.java:85,88`, `DownloadServlet.java:74,77`).
+Defaults on both servlets are unchanged: `cors_allowOrigin() default "*"` and
+`cors_allowCredentials() default true`. What changed is the behaviour: when `allowOrigins` contains
+`*`, `CorsProcessor` now returns the literal `Access-Control-Allow-Origin: *`, never echoes the
+request's `Origin`, and omits `Access-Control-Allow-Credentials` whatever `allowCredentials` says.
+Both servlets log a WARN on activation for that combination.
 
-Allowing credentials with a wildcard origin is precisely the combination the CORS spec forbids
-browsers to honour; depending on how the filter echoes the origin, this can permit **any** website
-to drive authenticated upload/download requests with the victim's cookies. Even where the browser
-blocks it, the configuration signals an intent that is unsafe.
+So the dangerous reading — echoing an arbitrary origin back **with** credentials, letting any site
+drive authenticated upload/download requests with the victim's cookies — is no longer reachable
+through configuration. A wildcard still allows any origin to make **unauthenticated** cross-origin
+requests.
 
-- Set an explicit comma-separated origin list. Keep `allowCredentials=true` only if cookies are
-  genuinely used, and never together with `*`.
+- Set an explicit comma-separated origin list. It is now also the only way to obtain
+  `Access-Control-Allow-Credentials: true`; on judo-platform the variable is
+  `JUDO_PLATFORM_CORS_ALLOW_ORIGIN`.
 
 ### S-9 · Upload size limits: misleading units — **Medium**
 
@@ -218,8 +228,8 @@ TLS alone. The AWS SDK would add CRC32. Low probability, non-zero.
 Go-live gates:
 
 - [ ] `tokenRequired=true` on both servlets; already forced by judo-platform (S-4)
-- [ ] `expirationTime` > 0, set to minutes not hours (S-5)
-- [ ] Explicit CORS origin list; never `*` with `allowCredentials=true` (S-8)
+- [ ] `expirationTime` > 0 (default `1440`), set to the smallest workable value (S-5)
+- [ ] Explicit CORS origin list; a `*` origin silently drops credentials and logs a WARN (S-8)
 - [ ] Secret injected from a secret manager; jasypt verified if used (S-2)
 - [ ] Service account scoped to `objectAdmin` on **one** bucket; rotation documented (S-1)
 - [ ] `endpoint` is `https://` (S-3)

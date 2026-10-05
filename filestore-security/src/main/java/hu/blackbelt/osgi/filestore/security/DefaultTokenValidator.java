@@ -53,6 +53,7 @@ public class DefaultTokenValidator implements TokenValidator {
     private String issuers;
     private String audiencePrefix;
     private int expirationTimeInMinutes;
+    private int allowedClockSkewInSeconds;
 
     @Activate
     void start(TokenServiceConfig config) {
@@ -60,6 +61,7 @@ public class DefaultTokenValidator implements TokenValidator {
         issuers = config.issuer();
         audiencePrefix = config.audiencePrefix();
         expirationTimeInMinutes = config.expirationTime();
+        allowedClockSkewInSeconds = config.allowedClockSkew();
     }
 
     private Map<String, Object> parseToken(final String tokenString, final String audience) throws InvalidTokenException {
@@ -67,6 +69,7 @@ public class DefaultTokenValidator implements TokenValidator {
         if (tokenString != null && !tokenString.trim().isEmpty()) {
             JwtConsumerBuilder jwtConsumerBuilder = new JwtConsumerBuilder()
                     .setRelaxVerificationKeyValidation()
+                    .setAllowedClockSkewInSeconds(allowedClockSkewInSeconds)
                     .setRequireSubject()
                     .setVerificationKey(keyProvider.getPublicKey())
                     .setJwsAlgorithmConstraints(AlgorithmConstraints.ConstraintType.PERMIT, algorithm);

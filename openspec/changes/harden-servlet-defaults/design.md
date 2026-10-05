@@ -72,4 +72,4 @@ Annotation default values and new metatype attributes are binary compatible, and
 
 ## Open Questions
 
-- Whether `JudoDefaultSpringConfiguration` gets its token services through the DS annotation defaults. This affects only the release-note wording, not this repo's code.
+- ~~Whether `JudoDefaultSpringConfiguration` gets its token services through the DS annotation defaults.~~ **Answered (2026-10-05):** it does not. `JudoDefaultSpringConfiguration` only declares `@Autowired(required = false) TokenIssuer filestoreTokenIssuer` and `TokenValidator filestoreTokenValidator` (lines 338-345) and hands them to the dispatcher. No class in judo-ng/runtime outside this repository references `DefaultTokenIssuer` or `DefaultTokenValidator`, so a Spring app has filestore tokens only when it supplies those beans itself; the DS annotation defaults (`expirationTime`, `allowedClockSkew`) are applied by OSGi Config Admin only. Release notes therefore address Karaf/judo-platform deployments.

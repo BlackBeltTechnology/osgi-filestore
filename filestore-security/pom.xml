@@ -64,6 +64,22 @@
             <artifactId>jose4j</artifactId>
         </dependency>
 
+        <!-- Logback 1.2.x is the last line that binds to SLF4J 1.7 (the version used by the bundles); the tests
+             capture WARN entries with its ListAppender. -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.13</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.9.1</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>

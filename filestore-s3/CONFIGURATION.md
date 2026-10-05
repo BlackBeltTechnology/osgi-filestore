@@ -105,13 +105,15 @@ Separate PIDs, owned by `filestore-servlet`. Defaults as declared in the source:
 | `maxSize` | `52428800` | **bytes**, despite the `_KB` constant name and "(kB)" label — compared directly against `Content-Length` (`UploadServlet.java:187`). = 50 MB |
 | `maxFileSize` | `52428800` | same units caveat |
 | `tokenRequired` | **`false`** | off by default, both servlets — SECURITY.md S-4 |
-| `cors.allowOrigin` | **`*`** | SECURITY.md S-8 |
-| `cors.allowCredentials` | **`true`** | unsafe combined with `*` |
+| `cors.allowOrigin` | **`*`** | SECURITY.md S-8. With a wildcard the servlets reply `Access-Control-Allow-Origin: *` and omit `Access-Control-Allow-Credentials`, and log a WARN on activation |
+| `cors.allowCredentials` | **`true`** | ignored while `cors.allowOrigin` contains `*`; set an explicit origin list for credentialed requests |
 | `slowUploads` | `0` ms | artificial delay, for testing progress UIs |
 | `noDataTimeout` | `20000` ms | idle-connection timeout |
 
-Token expiry lives in yet another PID (`filestore-security`): `expirationTime`, default **`0` =
-never expires**.
+Token expiry lives in yet another PID (`filestore-security`): `expirationTime`, default **`1440`
+minutes (24 h)**; an explicit `0` still means "never expires" and logs a WARN on activation. The
+same PID carries `allowedClockSkew`, default **`60` seconds**, the clock difference the validator
+tolerates on `exp` and `nbf`.
 
 **Size reconciliation:** `maxSize` (50 MB) and the backend's 5 MB multipart threshold are
 independent. Since the multipart fix, the S3 backend stores what the servlet accepts on GCS; before

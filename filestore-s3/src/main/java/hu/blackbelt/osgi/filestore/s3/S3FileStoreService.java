@@ -78,6 +78,11 @@ public class S3FileStoreService implements FileStoreService {
         protocol = config.protocol() != null ? config.protocol().toLowerCase() : null;
         bucketName = config.bucketName();
 
+        if (config.endpoint() != null && config.endpoint().toLowerCase().startsWith("http://")) {
+            log.warn("S3 filestore endpoint {} is cleartext: signed credentials and file content travel unencrypted,"
+                    + " use https:// outside of local development", config.endpoint());
+        }
+
         if (s3Client == null) {
             var builder = Client.s3()
                     .region(config.region())

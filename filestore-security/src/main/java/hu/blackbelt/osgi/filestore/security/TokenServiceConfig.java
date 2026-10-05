@@ -36,6 +36,9 @@ public @interface TokenServiceConfig {
     @AttributeDefinition(required = false, name = "Audience prefix")
     String audiencePrefix();
 
-    @AttributeDefinition(required = false, name = "Expiration time", description = "Token expiration time (minutes), 0 if not expiring", type = AttributeType.INTEGER)
-    int expirationTime() default 0;
+    @AttributeDefinition(required = false, name = "Expiration time", description = "Token expiration time (minutes), 0 if not expiring (not recommended)", type = AttributeType.INTEGER)
+    int expirationTime() default 1440;
+
+    @AttributeDefinition(required = false, name = "Allowed clock skew", description = "Tolerated clock difference between token issuer and validator (seconds)", type = AttributeType.INTEGER)
+    int allowedClockSkew() default 60;
 }

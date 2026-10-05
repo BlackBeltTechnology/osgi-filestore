@@ -40,8 +40,10 @@
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
+            <!-- Logback 1.2.x is the last line that binds to SLF4J 1.7 (the version used by the bundles); the tests
+                 capture WARN entries with its ListAppender. -->
             <artifactId>logback-classic</artifactId>
-            <version>1.5.12</version>
+            <version>1.2.13</version>
             <scope>test</scope>
         </dependency>
         <dependency>
