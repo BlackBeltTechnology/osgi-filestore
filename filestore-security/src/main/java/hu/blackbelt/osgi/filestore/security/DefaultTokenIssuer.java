@@ -25,6 +25,7 @@ import hu.blackbelt.osgi.filestore.security.api.Token;
 import hu.blackbelt.osgi.filestore.security.api.TokenIssuer;
 import hu.blackbelt.osgi.filestore.security.api.UploadClaim;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.lang.JoseException;
@@ -39,6 +40,7 @@ import java.util.UUID;
 
 @Designate(ocd = TokenServiceConfig.class)
 @Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Slf4j
 public class DefaultTokenIssuer implements TokenIssuer {
 
     private String algorithm;
@@ -54,6 +56,10 @@ public class DefaultTokenIssuer implements TokenIssuer {
         expectedIssuers = config.issuer();
         expectedAudiencePrefix = config.audiencePrefix();
         expirationTimeInMinutes = config.expirationTime();
+        if (expirationTimeInMinutes <= 0) {
+            log.warn("Filestore token issuer is configured with expirationTime={}, so issued upload and download"
+                    + " tokens never expire", expirationTimeInMinutes);
+        }
     }
 
     @SneakyThrows

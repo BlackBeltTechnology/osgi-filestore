@@ -33,9 +33,7 @@ Files SHALL be stored as S3 objects with key `<prefix><fileId>`. Object metadata
 ### Caching (Proposed)
 
 A `LoadingCache<String, Map<String, String>>` with `maximumSize = 10000` and `expireAfterWrite = 10 minutes` SHALL cache object metadata, consistent with sibling implementations.
-
 ## Requirements
-
 ### Requirement: File Storage with UUID Identification
 
 The service SHALL generate a UUID-based `fileId`, upload the file content to S3 as an object with key `<prefix><fileId>`, and store metadata (filename, MIME type, create time, size) as S3 object metadata.
@@ -132,3 +130,19 @@ The service SHALL register a `URLStreamHandlerService` on activation and unregis
 - **GIVEN** the component was previously activated
 - **WHEN** `deactivate()` is called
 - **THEN** the `URLStreamHandlerService` registration is unregistered, the S3 client is closed, and references are set to `null`
+
+### Requirement: Cleartext Endpoint Warning
+
+On activation, when the configured `endpoint` starts with `http://` (case-insensitive), the S3 filestore SHALL log at WARN level, once per activation, that credentials-signed requests and file content travel unencrypted. The warning SHALL NOT prevent activation or change request handling.
+
+#### Scenario: HTTP endpoint configured
+- **GIVEN** a `Config` with `endpoint = "http://minio.local:9000"`
+- **WHEN** the component is activated
+- **THEN** one WARN entry is logged naming the endpoint
+- **AND** the component activates and serves requests as before
+
+#### Scenario: HTTPS or default endpoint is silent
+- **GIVEN** a `Config` with `endpoint = "https://storage.googleapis.com"`, or with no endpoint so the AWS default is used
+- **WHEN** the component is activated
+- **THEN** no WARN entry about the endpoint is logged
+

@@ -1,5 +1,8 @@
 # S3FileStoreService Comparison Report
 
+> **Historical.** Written for `JNG-6378_AddS3Support`. Most findings are resolved; see
+> [docs/gcs/assessment.md §4](docs/gcs/assessment.md#4-history-the-original-comparison-report) for the current status of each.
+
 Comparison between the current working branch (`JNG-6378_AddS3Support`) and the clean version at `/home/balazs/IdeaProjects/osgi-filestore-clean`.
 
 ## S3 Client Library — the fundamental difference

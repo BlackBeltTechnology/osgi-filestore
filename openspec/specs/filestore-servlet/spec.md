@@ -8,7 +8,8 @@ Provides HTTP servlet endpoints for uploading files to and downloading files fro
 
 - **`UploadServlet`** -- `@Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)` extending `HttpServlet`. Configured via `@Designate(ocd = UploadServlet.Config.class)`. Holds `@Reference` to `HttpService` (mandatory), `FileStoreService` (mandatory, `ReferencePolicyOption.GREEDY`), `TokenValidator` (optional, greedy), and `TokenIssuer` (optional, greedy). Registers itself at the configured `servletPath` via `httpService.registerServlet(...)`. Handles `POST` for multipart upload and `GET` for upload status monitoring, file retrieval, session management, and upload cancellation.
 - **`DownloadServlet`** -- `@Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE, service = Servlet.class)` extending `HttpServlet`. Configured via `@Designate(ocd = DownloadServlet.Config.class)`. Holds `@Reference` to `HttpService` (mandatory), `FileStoreService` (mandatory, greedy), and `TokenValidator` (optional, greedy). Handles `GET` for file downloads with content-disposition, content-type, and content-length headers.
-- **`CorsProcessor`** -- Lombok `@Builder` class that processes CORS preflight (`OPTIONS`) and actual requests. Configurable fields: `allowOrigins`, `allowCredentials`, `allowHeaders`, `exposeHeaders`, `maxAge`, `preflightErrorStatus`. The `process(HttpServletRequest, HttpServletResponse, Collection<String>)` method returns `true` if the request should proceed to the servlet, `false` if CORS handling consumed the response.
+- **`CorsProcessor`** -- Lombok `@Builder` class that processes CORS preflight (`OPTIONS`) and actual requests. Configurable fields: `allowOrigins`, `allowCredentials`, `allowHeaders`, `exposeHeaders`, `maxAge`, `preflightErrorStatus`. The `process(HttpServletRequest, HttpServletResponse, Collection<String>)` method returns `true` if the request should proceed to the servlet, `false` if CORS handling consumed the response. **Wildcard rule:** when `allowOrigins` contains `*`, both the preflight and the actual-request path emit the literal `Access-Control-Allow-Origin: *`, never echo the request `Origin`, and omit `Access-Control-Allow-Credentials` regardless of `allowCredentials`; an explicit origin list echoes the matching origin and sets the credentials header.
+- **`UnsafeConfigurationWarnings`** -- static helper shared by both servlets, called from `@Activate`. Logs one WARN per activation for `tokenRequired = false` and for a wildcard `cors.allowOrigin` combined with `cors.allowCredentials = true`. Never changes request handling.
 - **`UploadListener`** -- Extends `AbstractUploadListener`, implements `org.apache.commons.fileupload.ProgressListener`. Stored in the HTTP session under `ATTR_LISTENER = "LISTENER"`. Includes a `TimeoutWatchDog` inner thread that detects frozen uploads by monitoring `bytesRead` progress at 5-second intervals and raises `UploadTimeoutException` after `noDataTimeout` milliseconds of inactivity.
 - **`AbstractUploadListener`** -- Abstract base class tracking `bytesRead`, `contentLength`, `exception`, `slowUploads` delay, `frozenTimeout` (60s), and `postResponse`. The `update(long done, long total, int item)` method saves state periodically (every 3 seconds), throws the stored exception if canceled, and optionally sleeps for `slowUploads` milliseconds.
 - **`UploadUtils`** -- Static utility class providing `PER_THREAD_REQUEST` ThreadLocal, `copyFromInputStreamToOutputStream(...)`, `findFileItem(...)`, `getSessionFileItems(...)`, `removeSessionFileItems(...)`, `renderJsonResponse(...)`, `renderXmlResponse(...)`, `renderMessage(...)`, `statusToString(...)`, `getContentLength(...)`, `getMessage(String key, Object... pars)` (localized via `ResourceBundle("UploadServlet")`), and `DefaultFileItemFactory` inner class extending `DiskFileItemFactory`.
@@ -31,9 +32,7 @@ DownloadServlet ---@Reference---> HttpService
                 ---@Reference(optional)---> TokenValidator
                 ----uses----> CorsProcessor
 ```
-
 ## Requirements
-
 ### Requirement: Multipart File Upload
 
 The `UploadServlet.doPost(...)` SHALL accept multipart HTTP POST requests parsed via `org.apache.commons.fileupload.servlet.ServletFileUpload`. Each received `FileItem` SHALL be stored using `fileStoreService.put(InputStream, fileName, contentType)`. The response SHALL be JSON with structure `{"files":[...], "finished":"ok"}` where each file entry contains `field`, `id`, `name`, `url`, `ctype`, and `size`. If a `TokenIssuer` is available, each file entry SHALL additionally include a `token` field containing a download token with claims `FILE_ID`, `FILE_NAME`, `FILE_SIZE`, `FILE_MIME_TYPE`, and `CONTEXT`.
@@ -108,16 +107,18 @@ When `DownloadServlet.Config.tokenRequired()` is `true`, the servlet SHALL requi
 
 Both `UploadServlet` and `DownloadServlet` SHALL delegate CORS processing to `CorsProcessor` before handling requests. The `CorsProcessor.process(...)` method SHALL handle three cases:
 
-1. **OPTIONS preflight**: Validate `Origin` against `allowOrigins`, `Access-Control-Request-Method` against accepted methods, and `Access-Control-Request-Headers` against `allowHeaders` (case-insensitive). On success, respond with 200 and set `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, `Access-Control-Max-Age`, and `Access-Control-Allow-Credentials`. On failure, respond with `preflightErrorStatus` (default 400). Return `false` to prevent further servlet processing.
-2. **Allowed method**: If `Origin` header is present, validate against `allowOrigins`. If allowed, set `Access-Control-Allow-Origin`, `Access-Control-Allow-Credentials`, and `Access-Control-Expose-Headers`. Return `true`.
+1. **OPTIONS preflight**: Validate `Origin` against `allowOrigins`, `Access-Control-Request-Method` against accepted methods, and `Access-Control-Request-Headers` against `allowHeaders` (case-insensitive). On success, respond with 200 and set `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Headers` and `Access-Control-Max-Age`, plus `Access-Control-Allow-Credentials` subject to the wildcard rule below. On failure, respond with `preflightErrorStatus` (default 400). Return `false` to prevent further servlet processing.
+2. **Allowed method**: If an `Origin` header is present, validate it against `allowOrigins`. If allowed, set `Access-Control-Allow-Origin` and `Access-Control-Expose-Headers`, plus `Access-Control-Allow-Credentials` subject to the wildcard rule below. Return `true`.
 3. **Disallowed method**: Respond with 405 (SC_METHOD_NOT_ALLOWED) and return `false`.
+
+**Wildcard rule:** when `allowOrigins` contains `*`, the processor SHALL set `Access-Control-Allow-Origin` to the literal value `*`, SHALL NOT echo the request's `Origin`, and SHALL NOT set `Access-Control-Allow-Credentials`, regardless of the `allowCredentials` setting. When `allowOrigins` is an explicit list, the processor SHALL echo the matching request `Origin` and SHALL set `Access-Control-Allow-Credentials` to the configured `allowCredentials` value.
 
 The `UploadServlet` SHALL accept methods `GET`, `POST`, `OPTIONS`. The `DownloadServlet` SHALL accept methods `GET`, `OPTIONS`. Both SHALL always include the `X-Token` header in `allowHeaders`. CORS configuration SHALL be sourced from each servlet's `Config`: `cors_allowOrigin` (default `"*"`), `cors_allowCredentials` (default `true`), `cors_allowHeaders`, `cors_exposeHeaders`, `cors_maxAge` (default `-1`), `cors_prefligthErrorStatus` (default `400`).
 
 #### Scenario: Successful CORS preflight for upload
 - **GIVEN** `UploadServlet` is configured with `cors_allowOrigin = "https://example.com"`
 - **WHEN** an OPTIONS request is sent with `Origin: https://example.com`, `Access-Control-Request-Method: POST`, and `Access-Control-Request-Headers: Content-Type,X-Token`
-- **THEN** the response status is 200, `Access-Control-Allow-Origin` is `https://example.com`, `Access-Control-Allow-Methods` is `POST`, `Access-Control-Allow-Headers` includes `Content-Type,X-Token`, and the servlet's `doPost` is not called
+- **THEN** the response status is 200, `Access-Control-Allow-Origin` is `https://example.com`, `Access-Control-Allow-Methods` is `POST`, `Access-Control-Allow-Headers` includes `Content-Type,X-Token`, `Access-Control-Allow-Credentials` is `true`, and the servlet's `doPost` is not called
 
 #### Scenario: CORS preflight rejected for disallowed origin
 - **GIVEN** `UploadServlet` is configured with `cors_allowOrigin = "https://trusted.com"`
@@ -125,9 +126,27 @@ The `UploadServlet` SHALL accept methods `GET`, `POST`, `OPTIONS`. The `Download
 - **THEN** the response status is 400 (the configured `cors_prefligthErrorStatus`) and no `Access-Control-Allow-Origin` header is set
 
 #### Scenario: Non-preflight request from allowed origin
-- **GIVEN** `DownloadServlet` is configured with `cors_allowOrigin = "*"` and `cors_exposeHeaders = "Content-Type,Content-Disposition"`
+- **GIVEN** `DownloadServlet` is configured with `cors_allowOrigin = "*"`, `cors_allowCredentials = true` and `cors_exposeHeaders = "Content-Type,Content-Disposition"`
 - **WHEN** a GET request is sent with `Origin: https://any-origin.com`
-- **THEN** the response includes `Access-Control-Allow-Origin: https://any-origin.com`, `Access-Control-Allow-Credentials: true`, and `Access-Control-Expose-Headers: Content-Type,Content-Disposition`, and the request proceeds to `doGet`
+- **THEN** the response includes `Access-Control-Allow-Origin: *` and `Access-Control-Expose-Headers: Content-Type,Content-Disposition`
+- **AND** the response does not include `Access-Control-Allow-Credentials`
+- **AND** the request proceeds to `doGet`
+
+#### Scenario: Wildcard preflight does not grant credentials
+- **GIVEN** `UploadServlet` is configured with `cors_allowOrigin = "*"` and `cors_allowCredentials = true`
+- **WHEN** an OPTIONS request is sent with `Origin: https://evil.com` and `Access-Control-Request-Method: POST`
+- **THEN** the response status is 200 and `Access-Control-Allow-Origin` is `*`
+- **AND** the response does not include `Access-Control-Allow-Credentials`
+
+#### Scenario: Explicit origin list keeps credentials
+- **GIVEN** `DownloadServlet` is configured with `cors_allowOrigin = "https://app.example.com"` and `cors_allowCredentials = true`
+- **WHEN** a GET request is sent with `Origin: https://app.example.com`
+- **THEN** the response includes `Access-Control-Allow-Origin: https://app.example.com` and `Access-Control-Allow-Credentials: true`
+
+#### Scenario: Request without Origin header
+- **GIVEN** either servlet with any CORS configuration
+- **WHEN** a request for an accepted method is sent without an `Origin` header
+- **THEN** no CORS response headers are set and the request proceeds to the servlet
 
 ### Requirement: Upload Progress Monitoring
 
@@ -177,3 +196,26 @@ Both `UploadServlet` and `DownloadServlet` SHALL register themselves with the OS
 - **GIVEN** `DownloadServlet` was activated with `servletPath = "/api/download"`
 - **WHEN** the component is deactivated
 - **THEN** `httpService.unregister("/api/download")` is called
+
+### Requirement: Unsafe Servlet Configuration Warnings
+
+On activation, `UploadServlet` and `DownloadServlet` SHALL log at WARN level, once per activation, for each unsafe effective configuration. A warning SHALL NOT change request handling.
+
+- `tokenRequired = false`: the warning SHALL state that requests are not authenticated when no `TokenValidator` is bound.
+- `cors_allowOrigin` contains `*` while `cors_allowCredentials = true`: the warning SHALL state that credentials are not granted to wildcard origins and that an explicit origin list is required for credentialed requests.
+
+#### Scenario: Token enforcement disabled
+- **GIVEN** a servlet `Config` with `tokenRequired = false`
+- **WHEN** the servlet is activated
+- **THEN** one WARN entry is logged naming the servlet path and `tokenRequired`
+
+#### Scenario: Wildcard origin with credentials
+- **GIVEN** a servlet `Config` with `cors_allowOrigin = "*"` and `cors_allowCredentials = true`
+- **WHEN** the servlet is activated
+- **THEN** one WARN entry is logged naming `cors.allowOrigin` and `cors.allowCredentials`
+
+#### Scenario: Safe configuration is silent
+- **GIVEN** a servlet `Config` with `tokenRequired = true` and `cors_allowOrigin = "https://app.example.com"`
+- **WHEN** the servlet is activated
+- **THEN** no WARN entry about unsafe configuration is logged
+
