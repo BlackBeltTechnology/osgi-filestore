@@ -79,8 +79,7 @@ public class CorsProcessor {
             return false;
         }
 
-        response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, headerOriginValues.get(0));
-        response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, String.valueOf(allowCredentials));
+        addAllowOriginAndCredentials(response, headerOriginValues.get(0));
         if (!exposeHeaders.isEmpty()) {
             response.addHeader(HEADER_ACCESS_CONTROL_EXPOSE_HEADERS, exposeHeaders.stream().collect(Collectors.joining(",")));
         }
@@ -122,14 +121,29 @@ public class CorsProcessor {
             return;
         }
 
-        response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, headerOriginValues.get(0));
+        addAllowOriginAndCredentials(response, origin);
         response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_METHODS, requestMethod);
         if (!requestHeaders.isEmpty()) {
             response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, requestHeaders.stream().collect(Collectors.joining(",")));
         }
         response.addHeader(HEADER_ACCESS_CONTROL_MAX_AGE, String.valueOf(maxAge));
-        response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, String.valueOf(allowCredentials));
         createPreflightResponse(response, true);
+    }
+
+    /**
+     * Sets Access-Control-Allow-Origin and, unless the configuration is a wildcard, Access-Control-Allow-Credentials.
+     *
+     * A wildcard origin list never grants credentials: the literal {@code *} is returned and the credentials header is
+     * omitted, because a browser rejects {@code Access-Control-Allow-Origin: *} together with credentials anyway, and
+     * echoing back an arbitrary origin would effectively allow credentialed requests from any site.
+     */
+    private void addAllowOriginAndCredentials(HttpServletResponse response, String requestOrigin) {
+        if (allowOrigins.contains(ALL)) {
+            response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, ALL);
+            return;
+        }
+        response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, requestOrigin);
+        response.addHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, String.valueOf(allowCredentials));
     }
 
     private void createPreflightResponse(HttpServletResponse response, boolean passed) {

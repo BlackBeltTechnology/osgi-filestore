@@ -28,6 +28,7 @@ import hu.blackbelt.osgi.filestore.security.api.exceptions.InvalidTokenException
 import hu.blackbelt.osgi.filestore.servlet.exceptions.MissingParameterException;
 import hu.blackbelt.osgi.filestore.servlet.exceptions.TokenRequiredException;
 import hu.blackbelt.osgi.filestore.servlet.utils.CorsProcessor;
+import hu.blackbelt.osgi.filestore.servlet.utils.UnsafeConfigurationWarnings;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.annotations.*;
@@ -123,6 +124,7 @@ public class DownloadServlet extends HttpServlet {
                 .build();
         servletPath = config.servletPath();
         tokenRequired = config.tokenRequired();
+        UnsafeConfigurationWarnings.check(servletPath, tokenRequired, config.cors_allowOrigin(), config.cors_allowCredentials());
 
         httpService.registerServlet(servletPath, this, getInitParams(servletPath), null);
     }
