@@ -71,6 +71,9 @@ public class DownloadServlet extends HttpServlet {
         @AttributeDefinition(required = false, name = "Token required", description = "Enforce token check", type = AttributeType.BOOLEAN)
         boolean tokenRequired() default false;
 
+        @AttributeDefinition(required = false, name = "Hardened responses", description = "nosniff + sandbox CSP on every download, active types (HTML/SVG/XML) always as attachment, token-first disposition, RFC 6266 filenames", type = AttributeType.BOOLEAN)
+        boolean hardenedResponses() default true;
+
         @AttributeDefinition(name = "CORS allow origin", description = "Comma-separated list of Access-Control-Allow-Origin")
         String cors_allowOrigin() default ALL;
 
@@ -93,6 +96,7 @@ public class DownloadServlet extends HttpServlet {
     private CorsProcessor corsProcessor = CorsProcessor.builder().build();
     private String servletPath;
     private boolean tokenRequired;
+    private boolean hardenedResponses = true;
 
     @Reference
     private HttpService httpService;
@@ -125,6 +129,7 @@ public class DownloadServlet extends HttpServlet {
         servletPath = config.servletPath();
         tokenRequired = config.tokenRequired();
         UnsafeConfigurationWarnings.check(servletPath, tokenRequired, config.cors_allowOrigin(), config.cors_allowCredentials());
+        hardenedResponses = config.hardenedResponses();
 
         httpService.registerServlet(servletPath, this, getInitParams(servletPath), null);
     }
@@ -173,10 +178,7 @@ public class DownloadServlet extends HttpServlet {
             String fileName = fileStoreService.getFileName(fileId);
             String contentType = fileStoreService.getMimeType(fileId);
             long size = fileStoreService.getSize(fileId);
-            Optional<String> disposition = Optional.ofNullable(inlineDispositionFromUrl);
-            if (disposition.isEmpty()) {
-                disposition = Optional.ofNullable(downloadToken).map(t -> (String) t.get(DownloadClaim.DISPOSITION));
-            }
+            String tokenDisposition = downloadToken != null ? (String) downloadToken.get(DownloadClaim.DISPOSITION) : null;
 
             if (fileName == null && downloadToken != null) {
                 fileName = (String) downloadToken.get(DownloadClaim.FILE_NAME);
@@ -184,10 +186,17 @@ public class DownloadServlet extends HttpServlet {
             if (contentType == null && downloadToken != null) {
                 contentType = (String) downloadToken.get(DownloadClaim.FILE_MIME_TYPE);
             }
-            if (fileName != null) {
-                response.setHeader("Content-Disposition", disposition.orElse("attachment") + "; filename=\"" + fileName + "\"");
+            if (hardenedResponses) {
+                response.setHeader("X-Content-Type-Options", DownloadResponsePolicy.NOSNIFF);
+                response.setHeader("Content-Security-Policy", DownloadResponsePolicy.CSP);
+                response.setHeader("Content-Disposition", DownloadResponsePolicy.contentDisposition(
+                        DownloadResponsePolicy.disposition(tokenDisposition, inlineDispositionFromUrl, contentType), fileName));
             } else {
-                response.setHeader("Content-Disposition", disposition.orElse("attachment"));
+                // legacy behaviour, kept for deployments that depend on inline HTML/SVG
+                String legacy = inlineDispositionFromUrl != null ? inlineDispositionFromUrl : tokenDisposition;
+                response.setHeader("Content-Disposition", fileName != null
+                        ? (legacy != null ? legacy : "attachment") + "; filename=\"" + fileName + "\""
+                        : (legacy != null ? legacy : "attachment"));
             }
             if (contentType != null) {
                 response.setContentType(contentType);
